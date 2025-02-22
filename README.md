@@ -9,7 +9,7 @@
 ## navicat  
 ## hex reader  
 
-///  
+``` javascript
 [MSSQL]
 Description = MS SQL Server  
 Driver = ODBC Driver 18 for SQL Server  
@@ -26,4 +26,4 @@ GO
 isql -v MSSQL sa mypass  
 powershell  
 New-NetFirewallRule -DisplayName "Allow SQL Server" -Direction Inbound -Action Allow -Protocol TCP -LocalPort 1433  
-///
+```  
