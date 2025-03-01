@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     std::promise<void> p1;
     std::future<void> f1 = p1.get_future();
 
-    // Start the main loop on another thread
+    // Start the main loop on another threads
     std::thread thr([&]() {
         // Queues the promise to be fulfilled after starting the loop
         app().getLoop()->queueInLoop([&p1]() { p1.set_value(); });

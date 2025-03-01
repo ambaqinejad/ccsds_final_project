@@ -3,7 +3,7 @@
 
 void CCSDSController::startWebSocket(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback, int port) {
     // Start WebSocket process dynamically
-    std::string command = "/workspace/ws/build/final-project " + std::to_string(port) + " &";  // Run in background
+    std::string command = "/mnt/c/Users/A.Baghinezhad/CLionProjects/Drogon_CCSDS/ccsds_final_project/ws/build/final-project " + std::to_string(port) + " &";  // Run in background
     int result = std::system(command.c_str());
 
     if (result == 0)
