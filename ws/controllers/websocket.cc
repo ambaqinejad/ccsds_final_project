@@ -1,5 +1,6 @@
 #include "websocket.h"
 #include <iostream>
+#include "../logics/CCSDS_Packet.h"
 
 using namespace std;
 
@@ -9,14 +10,6 @@ void websocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::s
     std::vector<uint8_t> receivedData(message.begin(), message.end());
 
     std::cout << "Received Binary Data (size: " << receivedData.size() << "): " << endl;
-//    for (auto byte : receivedData) {
-//      uint8_t u = (uint8_t) byte;
-//      std::cout << u << " " << std::endl;
-//      int i = (int) byte;
-//      std::cout << i << " " << std::endl;
-//    }
-//    std::cout << std::dec << std::endl;
-//    cout << "------------------------"<< std::endl;
     receiveData(receivedData);
     std::string response {"Good"};
     wsConnPtr->send(response, WebSocketMessageType::Text);
@@ -38,17 +31,18 @@ void websocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)
 
 // Function to simulate parsing
 void websocket::parseData(const std::vector<uint8_t>& data) {
-//    std::this_thread::sleep_for(std::chrono::seconds(1)); // Simulate processing time
-//    std::cout << "Parsed " << data.size() << " bytes of data.\n";
-//        for (auto byte : data) {
-//          uint8_t u = (uint8_t) byte;
-////          std::cout << u << " " << std::endl;
-//          int i = (int) byte;
-//          std::cout << i << " ";
-//        }
-//        std::cout << std::dec << std::endl;
-//        cout << "------------------------"<< std::endl;
-
+    std::cout << "Parsed " << data.size() << " bytes of data.\n";
+    size_t i = 0;
+    vector<CCSDS_Packet> packets;
+    while (i < data.size()) {
+        if (i != data.size() - 1 && data[i] == 'H' && data[i+1] == 'H') {
+            vector<uint8_t> chunk;
+            chunk.insert(chunk.begin(), data.begin() + i, data.begin() + i + 128);
+            CCSDS_Packet packet;
+            packets.push_back(packet.deserialize_packet(chunk));
+            i += 128;
+        }
+    }
 }
 
 void websocket::parsingThreadFunction() {
