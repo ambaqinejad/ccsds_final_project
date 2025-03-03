@@ -8,7 +8,7 @@ void websocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::s
     // write your application logic here
     std::vector<uint8_t> receivedData(message.begin(), message.end());
 
-    std::cout << "Received Binary Data (size: " << receivedData.size() << "): ";
+    std::cout << "Received Binary Data (size: " << receivedData.size() << "): " << endl;
 //    for (auto byte : receivedData) {
 //      uint8_t u = (uint8_t) byte;
 //      std::cout << u << " " << std::endl;
@@ -27,6 +27,7 @@ void websocket::handleNewConnection(const HttpRequestPtr &req, const WebSocketCo
     // write your application logic here
     cout << "Handling new connection" << endl;
     std::thread parser(&websocket::parsingThreadFunction, this);
+    parser.detach();
 }
 
 void websocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)
@@ -37,12 +38,20 @@ void websocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)
 
 // Function to simulate parsing
 void websocket::parseData(const std::vector<uint8_t>& data) {
-    std::this_thread::sleep_for(std::chrono::seconds(5)); // Simulate processing time
-    std::cout << "Parsed " << data.size() << " bytes of data.\n";
+//    std::this_thread::sleep_for(std::chrono::seconds(1)); // Simulate processing time
+//    std::cout << "Parsed " << data.size() << " bytes of data.\n";
+//        for (auto byte : data) {
+//          uint8_t u = (uint8_t) byte;
+////          std::cout << u << " " << std::endl;
+//          int i = (int) byte;
+//          std::cout << i << " ";
+//        }
+//        std::cout << std::dec << std::endl;
+//        cout << "------------------------"<< std::endl;
+
 }
 
 void websocket::parsingThreadFunction() {
-
     while (true) {
         std::vector<uint8_t> localBuffer;
         {
