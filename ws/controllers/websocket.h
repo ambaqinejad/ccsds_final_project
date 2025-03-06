@@ -12,7 +12,7 @@ class websocket : public drogon::WebSocketController<websocket>
     std::condition_variable _cv;
     bool isParsing = false;
     const int _CHUNK_SIZE = 128;
-    const int _PARSE_UNIT = 10 * _CHUNK_SIZE; // 10 chunks (1280 bytes)
+    const int _PARSE_UNIT = 1 * _CHUNK_SIZE; // 10 chunks (1280 bytes)
     bool _stopParser = false;
   public:
      void handleNewMessage(const WebSocketConnectionPtr&,
@@ -22,7 +22,7 @@ class websocket : public drogon::WebSocketController<websocket>
                                      const WebSocketConnectionPtr&) override;
     void handleConnectionClosed(const WebSocketConnectionPtr&) override;
 
-    void parseData(const std::vector<uint8_t>& data);
+    std::vector<uint8_t> parseData(std::vector<uint8_t>& data);
 
     void parsingThreadFunction();
 
