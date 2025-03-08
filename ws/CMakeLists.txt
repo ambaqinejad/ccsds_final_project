@@ -23,7 +23,8 @@ add_executable(${PROJECT_NAME} main.cc
         logics/CCSDS_Packet.cpp
         logics/CCSDS_Packet.h
         threads/ThreadedParser.cpp
-        threads/ThreadedParser.h)
+        threads/ThreadedParser.h
+        logics/SIDs.h)
 
 # ##############################################################################
 # If you include the drogon source code locally in your project, use this method

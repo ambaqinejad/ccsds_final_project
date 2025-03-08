@@ -1,8 +1,10 @@
 #include <drogon/drogon.h>
 #include <iostream>
+#include "./logics/SIDs.h"
 using namespace std;
 
 int main(int argc, char *argv[]) {
+    cout << sizeof(ExtendedP5) << endl;
     int port = 5000;
 
     if (argc > 1) {

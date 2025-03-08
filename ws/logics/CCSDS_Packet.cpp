@@ -3,6 +3,8 @@
 #include <cstring>
 #include <iomanip>
 
+#include "SIDs.h"
+
 CCSDS_Packet::CCSDS_Packet() {
     main_frame_header = 0;
     packet_id = 0;
@@ -73,6 +75,20 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
 
     // Remaining bytes are payload
     packet.payload.assign(chunk.begin() + offset, chunk.end());
+
+    if (packet.sid == 1) {
+        ExtendedP1 p1;
+        std::memcpy(&p1, payload.data(), sizeof(ExtendedP1));
+    } else if (packet.sid == 2) {
+        ExtendedP2 p2;
+        std::memcpy(&p2, payload.data(), sizeof(ExtendedP2));
+    } else if (packet.sid == 3) {
+        ExtendedP3 p3;
+        std::memcpy(&p3, payload.data(), sizeof(ExtendedP3));
+    } else if (packet.sid == 4) {
+        ExtendedP4 p4;
+        std::memcpy(&p4, payload.data(), sizeof(ExtendedP4));
+    }
 
     return packet;
 }
