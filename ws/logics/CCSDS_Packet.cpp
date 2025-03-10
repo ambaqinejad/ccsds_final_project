@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cstring>
 #include <iomanip>
-
+#include <arpa/inet.h>
 #include "SIDs.h"
 
 CCSDS_Packet::CCSDS_Packet() {
@@ -43,21 +43,21 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
         uint16_t value;
         std::memcpy(&value, &chunk[offset], sizeof(value));
         offset += sizeof(value);
-        return value;
+        return ntohs(value);
     };
 
     auto read_uint32 = [&](size_t& offset) {
         uint32_t value;
         std::memcpy(&value, &chunk[offset], sizeof(value));
         offset += sizeof(value);
-        return value;
+        return ntohs(value);
     };
 
     auto read_uint64 = [&](size_t& offset) {
         uint64_t value;
         std::memcpy(&value, &chunk[offset], sizeof(value));
         offset += sizeof(value);
-        return value;
+        return ntohs(value);
     };
 
     // Read fixed fields
@@ -78,16 +78,116 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
 
     if (packet.sid == 1) {
         ExtendedP1 p1;
-        std::memcpy(&p1, payload.data(), sizeof(ExtendedP1));
+        std::memcpy(&p1, packet.payload.data(), sizeof(ExtendedP1));
+        packet.extended_payload = p1;
     } else if (packet.sid == 2) {
         ExtendedP2 p2;
-        std::memcpy(&p2, payload.data(), sizeof(ExtendedP2));
+        std::memcpy(&p2, packet.payload.data(), sizeof(ExtendedP2));
+        packet.extended_payload = p2;
     } else if (packet.sid == 3) {
         ExtendedP3 p3;
-        std::memcpy(&p3, payload.data(), sizeof(ExtendedP3));
+        std::memcpy(&p3, packet.payload.data(), sizeof(ExtendedP3));
+        packet.extended_payload = p3;
     } else if (packet.sid == 4) {
         ExtendedP4 p4;
-        std::memcpy(&p4, payload.data(), sizeof(ExtendedP4));
+        std::memcpy(&p4, packet.payload.data(), sizeof(ExtendedP4));
+        packet.extended_payload = p4;
+    } else if (packet.sid == 5) {
+        ExtendedP5 p5;
+        std::memcpy(&p5, packet.payload.data(), sizeof(ExtendedP5));
+        packet.extended_payload = p5;
+    } else if (packet.sid == 6) {
+        ExtendedP6 p6;
+        std::memcpy(&p6, packet.payload.data(), sizeof(ExtendedP6));
+        packet.extended_payload = p6;
+    } else if (packet.sid == 7) {
+        ExtendedP7 p7;
+        std::memcpy(&p7, packet.payload.data(), sizeof(ExtendedP7));
+        packet.extended_payload = p7;
+    } else if (packet.sid == 8) {
+        ExtendedP8 p8;
+        std::memcpy(&p8, packet.payload.data(), sizeof(ExtendedP8));
+        packet.extended_payload = p8;
+    } else if (packet.sid == 9) {
+        ExtendedP9 p9;
+        std::memcpy(&p9, packet.payload.data(), sizeof(ExtendedP9));
+        packet.extended_payload = p9;
+    } else if (packet.sid == 10) {
+        ExtendedP10 p10;
+        std::memcpy(&p10, packet.payload.data(), sizeof(ExtendedP10));
+        packet.extended_payload = p10;
+    } else if (packet.sid == 11) {
+        ExtendedP11 p11;
+        std::memcpy(&p11, packet.payload.data(), sizeof(ExtendedP11));
+        packet.extended_payload = p11;
+    } else if (packet.sid == 12) {
+        ExtendedP12 p12;
+        std::memcpy(&p12, packet.payload.data(), sizeof(ExtendedP12));
+        packet.extended_payload = p12;
+    } else if (packet.sid == 13) {
+        ExtendedP13 p13;
+        std::memcpy(&p13, packet.payload.data(), sizeof(ExtendedP13));
+        packet.extended_payload = p13;
+    } else if (packet.sid == 14) {
+        ExtendedP14 p14;
+        std::memcpy(&p14, packet.payload.data(), sizeof(ExtendedP14));
+        packet.extended_payload = p14;
+    } else if (packet.sid == 15) {
+        ExtendedP15 p15;
+        std::memcpy(&p15, packet.payload.data(), sizeof(ExtendedP15));
+        packet.extended_payload = p15;
+    } else if (packet.sid == 16) {
+        ExtendedP16 p16;
+        std::memcpy(&p16, packet.payload.data(), sizeof(ExtendedP16));
+        packet.extended_payload = p16;
+    } else if (packet.sid == 17) {
+        ExtendedP17 p17;
+        std::memcpy(&p17, packet.payload.data(), sizeof(ExtendedP17));
+        packet.extended_payload = p17;
+    } else if (packet.sid == 18) {
+        ExtendedP18 p18;
+        std::memcpy(&p18, packet.payload.data(), sizeof(ExtendedP18));
+        packet.extended_payload = p18;
+    } else if (packet.sid == 19) {
+        ExtendedP19 p19;
+        std::memcpy(&p19, packet.payload.data(), sizeof(ExtendedP19));
+        packet.extended_payload = p19;
+    } else if (packet.sid == 20) {
+        ExtendedP20 p20;
+        std::memcpy(&p20, packet.payload.data(), sizeof(ExtendedP20));
+        packet.extended_payload = p20;
+    } else if (packet.sid == 21) {
+        ExtendedP21 p21;
+        std::memcpy(&p21, packet.payload.data(), sizeof(ExtendedP21));
+        packet.extended_payload = p21;
+    } else if (packet.sid == 22) {
+        ExtendedP22 p22;
+        std::memcpy(&p22, packet.payload.data(), sizeof(ExtendedP22));
+        packet.extended_payload = p22;
+    } else if (packet.sid == 23) {
+        ExtendedP23 p23;
+        std::memcpy(&p23, packet.payload.data(), sizeof(ExtendedP23));
+        packet.extended_payload = p23;
+    } else if (packet.sid == 24) {
+        ExtendedP24 p24;
+        std::memcpy(&p24, packet.payload.data(), sizeof(ExtendedP24));
+        packet.extended_payload = p24;
+    } else if (packet.sid == 25) {
+        ExtendedP25 p25;
+        std::memcpy(&p25, packet.payload.data(), sizeof(ExtendedP25));
+        packet.extended_payload = p25;
+    } else if (packet.sid == 26) {
+        ExtendedP26 p26;
+        std::memcpy(&p26, packet.payload.data(), sizeof(ExtendedP26));
+        packet.extended_payload = p26;
+    } else if (packet.sid == 27) {
+        ExtendedP27 p27;
+        std::memcpy(&p27, packet.payload.data(), sizeof(ExtendedP27));
+        packet.extended_payload = p27;
+    } else if (packet.sid == 28) {
+        ExtendedP28 p28;
+        std::memcpy(&p28, packet.payload.data(), sizeof(ExtendedP28));
+        packet.extended_payload = p28;
     }
 
     return packet;
