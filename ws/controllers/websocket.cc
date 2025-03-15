@@ -1,5 +1,7 @@
 #include "websocket.h"
 #include <iostream>
+
+#include "FileController.h"
 #include "../logics/CCSDS_Packet.h"
 
 using namespace std;
@@ -24,6 +26,7 @@ void websocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::s
 
 void websocket::handleNewConnection(const HttpRequestPtr &req, const WebSocketConnectionPtr& wsConnPtr)
 {
+    FileController::clients.insert(wsConnPtr);
     // write your application logic here
     cout << "Handling new connection" << endl;
     // Create a new parser instance for this connection
@@ -39,6 +42,7 @@ void websocket::handleNewConnection(const HttpRequestPtr &req, const WebSocketCo
 void websocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)
 {
     std::cout << "Connection closed" << std::endl;
+    FileController::clients.erase(wsConnPtr);
 
     std::lock_guard<std::mutex> lock(_mapMutex);
     if (_parserMap.find(wsConnPtr) != _parserMap.end()) {

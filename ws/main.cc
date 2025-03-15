@@ -13,7 +13,10 @@ int main(int argc, char *argv[]) {
     std::cout << "Starting WebSocket server on port " << port << std::endl;
 
     //Set HTTP listener address and port
-    drogon::app().addListener("0.0.0.0", port);
+    drogon::app()
+        .setClientMaxBodySize(20*2000*2000)
+        .setUploadPath("./uploads")
+        .addListener("0.0.0.0", port);
     drogon::app().run();
     return 0;
 }
