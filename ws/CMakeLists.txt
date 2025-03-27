@@ -25,6 +25,8 @@ add_executable(${PROJECT_NAME} main.cc
         threads/ThreadedParser.cpp
         threads/ThreadedParser.h
         logics/SIDs.h
+        database/MongoDBHandler.cpp
+        database/MongoDBHandler.h
 )
 
 # ##############################################################################
@@ -35,7 +37,14 @@ add_executable(${PROJECT_NAME} main.cc
 #
 # and comment out the following lines
 find_package(Drogon CONFIG REQUIRED)
+find_package(mongocxx REQUIRED)
+find_package(bsoncxx REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
+target_link_libraries(final-project
+        PRIVATE
+        mongocxx
+        bsoncxx
+)
 
 # ##############################################################################
 
@@ -52,6 +61,7 @@ aux_source_directory(filters FILTER_SRC)
 aux_source_directory(plugins PLUGIN_SRC)
 aux_source_directory(models MODEL_SRC)
 aux_source_directory(logics LOGIC_SRC)
+aux_source_directory(database DB_SRC)
 aux_source_directory(threads THREAD_SRC)
 
 drogon_create_views(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/views
@@ -74,6 +84,7 @@ target_sources(${PROJECT_NAME}
                ${FILTER_SRC}
                ${PLUGIN_SRC}
                ${LOGIC_SRC}
+               ${DB_SRC}
                ${THREAD_SRC}
                ${MODEL_SRC})
 # ##############################################################################

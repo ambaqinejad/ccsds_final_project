@@ -6,11 +6,15 @@
 
 #include "logics/CCSDS_Packet.h"
 
-#include <mongocxx/v_noabi/mongocxx/client.hpp>
-#include <mongocxx/v_noabi/mongocxx/instance.hpp>
-#include <mongocxx/v_noabi/mongocxx/uri.hpp>
-#include <bsoncxx/v_noabi/bsoncxx/json.hpp>
+#include <mongocxx/client.hpp>
+#include <mongocxx/instance.hpp>
+
+
+#include <mongocxx/uri.hpp>
+#include <bsoncxx/json.hpp>
 #include <iostream>
+
+#include "database/MongoDBHandler.h"
 
 std::unordered_set<WebSocketConnectionPtr> FileController::clients;
 
@@ -77,10 +81,13 @@ void FileController::processFile(const string &filename) {
 }
 
 void FileController::parseData(std::vector<std::vector<uint8_t>> chunks, int count_of_valid_chunks) {
+    MongoDBHandler dbHandler;
+
     for (size_t i = 0; i < chunks.size(); ++i) {
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
         double progress = ((double)i / count_of_valid_chunks) * 100;
         notifyClients(progress, packet);
+        dbHandler.insertPacket(packet);
         // packets.push_back(packet);
     }
 }
