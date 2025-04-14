@@ -86,7 +86,10 @@ void FileController::parseData(std::vector<std::vector<uint8_t>> chunks, int cou
     for (size_t i = 0; i < chunks.size(); ++i) {
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
         double progress = ((double)i / count_of_valid_chunks) * 100;
-        notifyClients(progress, packet);
+        // notify clients each 100 times
+        if (i % 100 == 0) {
+            notifyClients(progress, packet);
+        }
         dbHandler.insertPacket(packet);
         // packets.push_back(packet);
     }
