@@ -18,12 +18,75 @@ MongoDBHandler::MongoDBHandler() {
     static mongocxx::instance instance{}; // Required once per application
     client = mongocxx::client{mongocxx::uri{"mongodb://192.168.102.79:27017"}};
     database = client["CCSDS_DB"];
-    collection = database["packets"];
 }
 
 void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
-    bsoncxx::builder::basic::document document{};
+    // Serialize the extended_payload
+    std::visit([&](auto &&arg) {
+        using T = std::decay_t<decltype(arg)>;
+        if constexpr (std::is_same_v<T, ExtendedP1>) {
+            serializeExtendedPayloadP1(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP2>) {
+            serializeExtendedPayloadP2(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP3>) {
+            serializeExtendedPayloadP3(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP4>) {
+            serializeExtendedPayloadP4(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP5>) {
+            serializeExtendedPayloadP5(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP6>) {
+            serializeExtendedPayloadP6(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP7>) {
+            serializeExtendedPayloadP7(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP8>) {
+            serializeExtendedPayloadP8(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP9>) {
+            serializeExtendedPayloadP9(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP10>) {
+            serializeExtendedPayloadP10(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP11>) {
+            serializeExtendedPayloadP11(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP12>) {
+            serializeExtendedPayloadP12(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP13>) {
+            serializeExtendedPayloadP13(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP14>) {
+            serializeExtendedPayloadP14(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP15>) {
+            serializeExtendedPayloadP15(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP16>) {
+            serializeExtendedPayloadP16(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP17>) {
+            serializeExtendedPayloadP17(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP18>) {
+            serializeExtendedPayloadP18(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP19>) {
+            serializeExtendedPayloadP19(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP20>) {
+            serializeExtendedPayloadP20(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP21>) {
+            serializeExtendedPayloadP21(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP22>) {
+            serializeExtendedPayloadP22(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP23>) {
+            serializeExtendedPayloadP23(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP24>) {
+            serializeExtendedPayloadP24(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP25>) {
+            serializeExtendedPayloadP25(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP26>) {
+            serializeExtendedPayloadP26(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP27>) {
+            serializeExtendedPayloadP27(arg, packet);
+        } else if constexpr (std::is_same_v<T, ExtendedP28>) {
+            serializeExtendedPayloadP28(arg, packet);
+        }
+    }, packet.extended_payload);
 
+    std::cout << "Packet inserted successfully." << std::endl;
+}
+
+void MongoDBHandler::insertHeader(bsoncxx::builder::basic::document &document, const CCSDS_Packet &packet) {
     document.append(bsoncxx::builder::basic::kvp("main_frame_header", packet.main_frame_header));
     document.append(bsoncxx::builder::basic::kvp("packet_id", packet.packet_id));
     document.append(bsoncxx::builder::basic::kvp("packet_sequence_control", packet.packet_sequence_control));
@@ -33,107 +96,35 @@ void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     document.append(bsoncxx::builder::basic::kvp("sub_service_type", static_cast<int>(packet.sub_service_type)));
     document.append(bsoncxx::builder::basic::kvp("sid", static_cast<int>(packet.sid)));
     document.append(bsoncxx::builder::basic::kvp("timestamp", static_cast<int64_t>(packet.timestamp)));
-    document.append(bsoncxx::builder::basic::kvp("crc_fail_upload_map", static_cast<int64_t>(packet.crc_fail_upload_map)));
+    document.append(
+            bsoncxx::builder::basic::kvp("crc_fail_upload_map", static_cast<int64_t>(packet.crc_fail_upload_map)));
     document.append(bsoncxx::builder::basic::kvp("flash_address", static_cast<int>(packet.flash_address)));
-
-//    // Convert payload to BSON array
-//    bsoncxx::builder::basic::array payload_array;
-//    for (auto byte : packet.payload) {
-//        payload_array.append(static_cast<int>(byte));
-//    }
-//    document.append(bsoncxx::builder::basic::kvp("payload", payload_array));
-//
-
-    // Serialize the extended_payload
-    std::visit([&](auto &&arg) {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, std::monostate>) {
-            document.append(bsoncxx::builder::basic::kvp("type", "none"));
-        } else if constexpr (std::is_same_v<T, ExtendedP1>) {
-            serializeExtendedPayloadP1(arg);
-        }
-        else if constexpr (std::is_same_v<T, ExtendedP2>) {
-            serializeExtendedPayloadP2(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP3>) {
-            serializeExtendedPayloadP3(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP4>) {
-            serializeExtendedPayloadP4(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP5>) {
-            serializeExtendedPayloadP5(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP6>) {
-            serializeExtendedPayloadP6(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP7>) {
-            serializeExtendedPayloadP7(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP8>) {
-            serializeExtendedPayloadP8(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP9>) {
-            serializeExtendedPayloadP9(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP10>) {
-            serializeExtendedPayloadP10(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP11>) {
-            serializeExtendedPayloadP11(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP12>) {
-            serializeExtendedPayloadP12(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP13>) {
-            serializeExtendedPayloadP13(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP14>) {
-            serializeExtendedPayloadP14(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP15>) {
-            serializeExtendedPayloadP15(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP16>) {
-            serializeExtendedPayloadP16(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP17>) {
-            serializeExtendedPayloadP17(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP18>) {
-            serializeExtendedPayloadP18(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP19>) {
-            serializeExtendedPayloadP19(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP20>) {
-            serializeExtendedPayloadP20(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP21>) {
-            serializeExtendedPayloadP21(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP22>) {
-            serializeExtendedPayloadP22(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP23>) {
-            serializeExtendedPayloadP23(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP24>) {
-            serializeExtendedPayloadP24(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP25>) {
-            serializeExtendedPayloadP25(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP26>) {
-            serializeExtendedPayloadP26(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP27>) {
-            serializeExtendedPayloadP27(arg);
-        } else if constexpr (std::is_same_v<T, ExtendedP28>) {
-            serializeExtendedPayloadP28(arg);
-        }
-    }, packet.extended_payload);
-    collection.insert_one(document.view());
-    std::cout << "Packet inserted successfully." << std::endl;
 }
 
 
-
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP1(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP1(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP1"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     bsoncxx::builder::basic::array cam1_array;
-    for (auto byte : payload.CameraPacket1) cam1_array.append(static_cast<int>(byte));
+    for (auto byte: payload.CameraPacket1) cam1_array.append(static_cast<int>(byte));
     doc.append(bsoncxx::builder::basic::kvp("CameraPacket2", cam1_array));
-    return doc;
+    collection.insert_one(doc.view());
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP2(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP2(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP2"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     bsoncxx::builder::basic::array cam2_array, cam3_array;
-    for (auto byte : payload.CameraPacket2) cam2_array.append(static_cast<uint8_t>(byte));
-    for (auto byte : payload.CameraPacket3) cam3_array.append(static_cast<uint8_t>(byte));
+    for (auto byte: payload.CameraPacket2) cam2_array.append(static_cast<uint8_t>(byte));
+    for (auto byte: payload.CameraPacket3) cam3_array.append(static_cast<uint8_t>(byte));
     doc.append(bsoncxx::builder::basic::kvp("CameraPacket2", cam2_array));
     doc.append(bsoncxx::builder::basic::kvp("CameraPacket3", cam3_array));
-
     doc.append(bsoncxx::builder::basic::kvp("res", payload.res));
     doc.append(bsoncxx::builder::basic::kvp("MemoryStatus", static_cast<int64_t>(payload.MemoryStatus)));
     doc.append(bsoncxx::builder::basic::kvp("StartFrequency", payload.StartFrequency));
@@ -151,7 +142,7 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP2(con
     doc.append(bsoncxx::builder::basic::kvp("TaskResetCnt", payload.TaskResetCnt));
     doc.append(bsoncxx::builder::basic::kvp("LastTaskResetNum", payload.LastTaskResetNum));
     bsoncxx::builder::basic::array respart2_2;
-    for (auto byte : payload.respart2_2) respart2_2.append(static_cast<uint8_t>(byte));
+    for (auto byte: payload.respart2_2) respart2_2.append(static_cast<uint8_t>(byte));
     doc.append(bsoncxx::builder::basic::kvp("respart2_2", respart2_2));
     doc.append(bsoncxx::builder::basic::kvp("UV_TransmitterFreq", static_cast<int32_t >(payload.UV_TransmitterFreq)));
     doc.append(bsoncxx::builder::basic::kvp("UV_RecieverFreq", static_cast<int32_t >(payload.UV_RecieverFreq)));
@@ -159,15 +150,19 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP2(con
     doc.append(bsoncxx::builder::basic::kvp("UV_TX", static_cast<int32_t >(payload.UV_TX)));
     doc.append(bsoncxx::builder::basic::kvp("respart2_3", payload.respart2_3));
     // Add more fields if needed
-    return doc;
+    collection.insert_one(doc.view());
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP3(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP3(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP3"];
     bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
 
     // Serialize all uint8_t[4] arrays
-    auto append_array = [](bsoncxx::builder::basic::document& doc, const std::string& key, const uint8_t* data, size_t size = 4) {
+    auto append_array = [](bsoncxx::builder::basic::document &doc, const std::string &key, const uint8_t *data,
+                           size_t size = 4) {
         bsoncxx::builder::basic::array arr;
         for (size_t i = 0; i < size; ++i)
             arr.append(static_cast<uint8_t>(data[i]));
@@ -212,18 +207,18 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP3(con
     doc.append(bsoncxx::builder::basic::kvp("OutputPower", static_cast<int8_t>(payload.OutputPower)));
     doc.append(bsoncxx::builder::basic::kvp("CAN_Status_X", static_cast<int8_t>(payload.CAN_Status_X)));
     doc.append(bsoncxx::builder::basic::kvp("Transmitter_mode_X", static_cast<int8_t>(payload.Transmitter_mode_X)));
-    doc.append(bsoncxx::builder::basic::kvp("Tx_frequency_X", payload.Tx_frequency_X));
+    doc.append(bsoncxx::builder::basic::kvp("Tx_frequency_X", static_cast<int32_t >(payload.Tx_frequency_X)));
 
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Scratch", payload.S_TR_Scratch));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_AES_Index", payload.S_TR_AES_Index));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Modulation", payload.S_TR_Modulation));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Bitrate", payload.S_TR_Bitrate));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Fdiviation", payload.S_TR_Fdiviation));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_BandWidth", payload.S_TR_BandWidth));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_CrcInit", payload.S_TR_CrcInit));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Lmx2572_Freq", payload.S_TR_Lmx2572_Freq));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Fifo_State", payload.S_TR_Fifo_State));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_SystemFaults", payload.S_TR_SystemFaults));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Scratch", static_cast<int32_t >(payload.S_TR_Scratch)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_AES_Index", static_cast<int32_t >(payload.S_TR_AES_Index)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Modulation", static_cast<int32_t >(payload.S_TR_Modulation)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Bitrate", static_cast<int32_t >(payload.S_TR_Bitrate)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Fdiviation", static_cast<int32_t >(payload.S_TR_Fdiviation)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_BandWidth", static_cast<int32_t >(payload.S_TR_BandWidth)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_CrcInit", static_cast<int32_t >(payload.S_TR_CrcInit)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Lmx2572_Freq", static_cast<int32_t >(payload.S_TR_Lmx2572_Freq)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Fifo_State", static_cast<int32_t >(payload.S_TR_Fifo_State)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_SystemFaults", static_cast<int32_t >(payload.S_TR_SystemFaults)));
 
     {
         bsoncxx::builder::basic::array arr;
@@ -232,45 +227,54 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP3(con
         doc.append(bsoncxx::builder::basic::kvp("resp2", arr));
     }
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP4(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP4(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP4"];
     bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_ReadLogAmp", static_cast<int32_t >(payload.S_TR_ReadLogAmp)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_TempSens1", static_cast<int32_t >(payload.S_TR_TempSens1)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_TempSens2", static_cast<int32_t >(payload.S_TR_TempSens2)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_Power", static_cast<int32_t >(payload.S_TR_Power)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_IntThr", static_cast<int32_t >(payload.S_TR_IntThr)));
+    doc.append(bsoncxx::builder::basic::kvp("S_TR_TransCuttOffTemp",
+                                            static_cast<int32_t >(payload.S_TR_TransCuttOffTemp)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Scratch", static_cast<int32_t >(payload.S_RX_Scratch)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_AES_Index", static_cast<int32_t >(payload.S_RX_AES_Index)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Modulation", static_cast<int32_t >(payload.S_RX_Modulation)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Bitrate", static_cast<int32_t >(payload.S_RX_Bitrate)));
+    doc.append(bsoncxx::builder::basic::kvp("RX_Fdiviation", static_cast<int32_t >(payload.RX_Fdiviation)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_BandWidth", static_cast<int32_t >(payload.S_RX_BandWidth)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_CrcInit", static_cast<int32_t >(payload.S_RX_CrcInit)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Lmx2572_Freq", static_cast<int32_t >(payload.S_RX_Lmx2572_Freq)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Fifo_State", static_cast<int32_t >(payload.S_RX_Fifo_State)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_SystemFaults", static_cast<int32_t >(payload.S_RX_SystemFaults)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_ReadLogAmp", static_cast<int32_t >(payload.S_RX_ReadLogAmp)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_TempSens1", static_cast<int32_t >(payload.S_RX_TempSens1)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_TempSens2", static_cast<int32_t >(payload.S_RX_TempSens2)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Power", static_cast<int32_t >(payload.S_RX_Power)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_IntThr", static_cast<int32_t >(payload.S_RX_IntThr)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_Reciever_SyncCrcErr",
+                                            static_cast<int32_t >(payload.S_RX_Reciever_SyncCrcErr)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_RSSI_Const", static_cast<int32_t >(payload.S_RX_RSSI_Const)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_RSSI", static_cast<int32_t >(payload.S_RX_RSSI)));
+    doc.append(bsoncxx::builder::basic::kvp("S_RX_RS485BD", static_cast<int32_t >(payload.S_RX_RS485BD)));
 
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_ReadLogAmp", payload.S_TR_ReadLogAmp));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_TempSens1", payload.S_TR_TempSens1));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_TempSens2", payload.S_TR_TempSens2));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_Power", payload.S_TR_Power));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_IntThr", payload.S_TR_IntThr));
-    doc.append(bsoncxx::builder::basic::kvp("S_TR_TransCuttOffTemp", payload.S_TR_TransCuttOffTemp));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Scratch", payload.S_RX_Scratch));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_AES_Index", payload.S_RX_AES_Index));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Modulation", payload.S_RX_Modulation));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Bitrate", payload.S_RX_Bitrate));
-    doc.append(bsoncxx::builder::basic::kvp("RX_Fdiviation", payload.RX_Fdiviation));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_BandWidth", payload.S_RX_BandWidth));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_CrcInit", payload.S_RX_CrcInit));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Lmx2572_Freq", payload.S_RX_Lmx2572_Freq));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Fifo_State", payload.S_RX_Fifo_State));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_SystemFaults", payload.S_RX_SystemFaults));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_ReadLogAmp", payload.S_RX_ReadLogAmp));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_TempSens1", payload.S_RX_TempSens1));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_TempSens2", payload.S_RX_TempSens2));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Power", payload.S_RX_Power));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_IntThr", payload.S_RX_IntThr));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_Reciever_SyncCrcErr", payload.S_RX_Reciever_SyncCrcErr));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_RSSI_Const", payload.S_RX_RSSI_Const));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_RSSI", payload.S_RX_RSSI));
-    doc.append(bsoncxx::builder::basic::kvp("S_RX_RS485BD", payload.S_RX_RS485BD));
+    collection.insert_one(doc.view());
 
-    return doc;
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP5(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP5(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP5"];
     bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
 
     bsoncxx::builder::basic::array pmu_array;
     for (int i = 0; i < 100; ++i) {
@@ -279,13 +283,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP5(con
 
     doc.append(bsoncxx::builder::basic::kvp("PMU1", pmu_array));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP6(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP6(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP6"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     bsoncxx::builder::basic::array pmu_array;
     for (int i = 0; i < 100; ++i) {
         pmu_array.append(static_cast<uint8_t>(payload.PMU2[i]));
@@ -293,12 +300,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP6(con
 
     doc.append(bsoncxx::builder::basic::kvp("PMU2", pmu_array));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP7(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP7(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP7"];
     bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
 
     bsoncxx::builder::basic::array pmu_array;
     for (int i = 0; i < 100; ++i) {
@@ -306,17 +317,21 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP7(con
     }
 
     doc.append(bsoncxx::builder::basic::kvp("PMU3", pmu_array));
+    collection.insert_one(doc.view());
 
-    return doc;
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP8(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP8(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP8"];
     bsoncxx::builder::basic::document doc{};
-
-    doc.append(bsoncxx::builder::basic::kvp("FDIRReportFlags", payload.FDIRReportFlags));
-    doc.append(bsoncxx::builder::basic::kvp("FDIROverCurrentReport", payload.FDIROverCurrentReport));
-    doc.append(bsoncxx::builder::basic::kvp("OBCConfigReport", payload.OBCConfigReport));
+    insertHeader(doc, packet);
+    doc.append(bsoncxx::builder::basic::kvp("FDIRReportFlags", static_cast<int32_t>(payload.FDIRReportFlags)));
+    doc.append(
+            bsoncxx::builder::basic::kvp("FDIROverCurrentReport", static_cast<int32_t>(payload.FDIROverCurrentReport)));
+    doc.append(bsoncxx::builder::basic::kvp("OBCConfigReport", static_cast<int32_t>(payload.OBCConfigReport)));
 
     doc.append(bsoncxx::builder::basic::kvp("SFResetCnt", payload.SFResetCnt));
     doc.append(bsoncxx::builder::basic::kvp("CBResetCnt", payload.CBResetCnt));
@@ -373,9 +388,9 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP8(con
     doc.append(bsoncxx::builder::basic::kvp("PRPTimeSampling", payload.PRPTimeSampling));
 
     // Packed bitfield group (flattened here)
-    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part1", payload.NumberOfResetPMUConnection));
-    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part2", payload.MMCBlkCnt));
-    doc.append(bsoncxx::builder::basic::kvp("MMC_WriteErrors", payload.MMC_WriteErrors));
+//    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part1", payload.NumberOfResetPMUConnection));
+//    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part2", payload.MMCBlkCnt));
+//    doc.append(bsoncxx::builder::basic::kvp("MMC_WriteErrors", payload.MMC_WriteErrors));
     doc.append(bsoncxx::builder::basic::kvp("processSPIDataPacketErrorCnt", payload.processSPIDataPacketErrorCnt));
 
     bsoncxx::builder::basic::array rw_dev_id_array;
@@ -383,14 +398,17 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP8(con
         rw_dev_id_array.append(static_cast<uint8_t>(payload.RWDevID[i]));
     }
     doc.append(bsoncxx::builder::basic::kvp("RWDevID", rw_dev_id_array));
+    collection.insert_one(doc.view());
 
-    return doc;
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP9(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP9(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP9"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // UC1_SunReceiveCnt
     bsoncxx::builder::basic::array uc1_sun_receive;
     for (int i = 0; i < 3; ++i) {
@@ -433,7 +451,7 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP9(con
     }
     doc.append(bsoncxx::builder::basic::kvp("HE_MRAMCnt", mram_cnt));
 
-    doc.append(bsoncxx::builder::basic::kvp("HE_ObcCounter", payload.HE_ObcCounter));
+    doc.append(bsoncxx::builder::basic::kvp("HE_ObcCounter", static_cast<int32_t>(payload.HE_ObcCounter)));
 
     // RTC times
     bsoncxx::builder::basic::array rtc1, rtc2, rtc3;
@@ -462,13 +480,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP9(con
     doc.append(bsoncxx::builder::basic::kvp("HescoLastGetTime", payload.HescoLastGetTime));
     doc.append(bsoncxx::builder::basic::kvp("BatteryFreeRunning", payload.BatteryFreeRunning));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP10(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP10(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP10"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     doc.append(bsoncxx::builder::basic::kvp("SS1LastGetTime", payload.SS1LastGetTime));
     doc.append(bsoncxx::builder::basic::kvp("SS1NumberSample", payload.SS1NumberSample));
     doc.append(bsoncxx::builder::basic::kvp("SS2LastGetTime", payload.SS2LastGetTime));
@@ -508,8 +529,8 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP10(co
     doc.append(bsoncxx::builder::basic::kvp("OBC_MB_Temp", payload.OBC_MB_Temp));
     doc.append(bsoncxx::builder::basic::kvp("OBC_ID_", payload.OBC_ID_));
     doc.append(bsoncxx::builder::basic::kvp("BootCounter", payload.BootCounter));
-    doc.append(bsoncxx::builder::basic::kvp("OBC_CommandCounter", payload.OBC_CommandCounter));
-    doc.append(bsoncxx::builder::basic::kvp("OBC_Counter", payload.OBC_Counter));
+    doc.append(bsoncxx::builder::basic::kvp("OBC_CommandCounter", static_cast<int32_t>(payload.OBC_CommandCounter)));
+    doc.append(bsoncxx::builder::basic::kvp("OBC_Counter", static_cast<int32_t>(payload.OBC_Counter)));
     doc.append(bsoncxx::builder::basic::kvp("OBC_CpuUsage", payload.OBC_CpuUsage));
     doc.append(bsoncxx::builder::basic::kvp("OBC_Mode", payload.OBC_Mode));
     doc.append(bsoncxx::builder::basic::kvp("OBC_Current", payload.OBC_Current));
@@ -517,27 +538,30 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP10(co
     doc.append(bsoncxx::builder::basic::kvp("OBC_ExecutedCmdCounter", payload.OBC_ExecutedCmdCounter));
     doc.append(bsoncxx::builder::basic::kvp("UV_Fail_Timer", payload.UV_Fail_Timer));
     doc.append(bsoncxx::builder::basic::kvp("OBC_WaitingTCToRun", payload.OBC_WaitingTCToRun));
-    doc.append(bsoncxx::builder::basic::kvp("OBC_ParameterAdd", payload.OBC_ParameterAdd));
-    doc.append(bsoncxx::builder::basic::kvp("MMC_Write_BLK_ADD", payload.MMC_Write_BLK_ADD));
-    doc.append(bsoncxx::builder::basic::kvp("MMC_Read_BLK_ADD", payload.MMC_Read_BLK_ADD));
+    doc.append(bsoncxx::builder::basic::kvp("OBC_ParameterAdd", static_cast<int32_t>(payload.OBC_ParameterAdd)));
+    doc.append(bsoncxx::builder::basic::kvp("MMC_Write_BLK_ADD", static_cast<int32_t>(payload.MMC_Write_BLK_ADD)));
+    doc.append(bsoncxx::builder::basic::kvp("MMC_Read_BLK_ADD", static_cast<int32_t>(payload.MMC_Read_BLK_ADD)));
     doc.append(bsoncxx::builder::basic::kvp("OBC_LINK_TYPE", payload.OBC_LINK_TYPE));
     doc.append(bsoncxx::builder::basic::kvp("RW4LastGetTime", payload.RW4LastGetTime));
     doc.append(bsoncxx::builder::basic::kvp("STRTimeSampling", payload.STRTimeSampling));
     doc.append(bsoncxx::builder::basic::kvp("MTTimeSetCmd", payload.MTTimeSetCmd));
     doc.append(bsoncxx::builder::basic::kvp("MTTimeSampling", payload.MTTimeSampling));
     doc.append(bsoncxx::builder::basic::kvp("FailCRC", payload.FailCRC));
-    doc.append(bsoncxx::builder::basic::kvp("Flash_program_Add", payload.Flash_program_Add));
+    doc.append(bsoncxx::builder::basic::kvp("Flash_program_Add", static_cast<int32_t>(payload.Flash_program_Add)));
     doc.append(bsoncxx::builder::basic::kvp("ready_program", payload.ready_program));
     doc.append(bsoncxx::builder::basic::kvp("Program_Mode", payload.Program_Mode));
     doc.append(bsoncxx::builder::basic::kvp("ProgramVersion", payload.ProgramVersion));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP11(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP11(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP11"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     doc.append(bsoncxx::builder::basic::kvp("KeyIndexEncrypt_UV", payload.KeyIndexEncrypt_UV));
     doc.append(bsoncxx::builder::basic::kvp("KeyIndexEncrypt_X", payload.KeyIndexEncrypt_X));
     doc.append(bsoncxx::builder::basic::kvp("KeyIndexEncrypt_S_TX", payload.KeyIndexEncrypt_S_TX));
@@ -551,8 +575,8 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP11(co
     for (int i = 0; i < 3; ++i) sf_mtdipole.append(payload.SF_MTDipoleActuation[i]);
     doc.append(bsoncxx::builder::basic::kvp("SF_MTDipoleActuation", sf_mtdipole));
 
-    doc.append(bsoncxx::builder::basic::kvp("SF_SysTimerCnt", payload.SF_SysTimerCnt));
-    doc.append(bsoncxx::builder::basic::kvp("SF_TransmitCnt", payload.SF_TransmitCnt));
+    doc.append(bsoncxx::builder::basic::kvp("SF_SysTimerCnt", static_cast<int32_t>(payload.SF_SysTimerCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("SF_TransmitCnt", static_cast<int32_t>(payload.SF_TransmitCnt)));
     doc.append(bsoncxx::builder::basic::kvp("SF_MTDipoleDuaration", payload.SF_MTDipoleDuaration));
 
     bsoncxx::builder::basic::array sf_wheel_ref_cmd;
@@ -594,15 +618,19 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP11(co
     doc.append(bsoncxx::builder::basic::kvp("UC1_SwitchCmd", payload.UC1_SwitchCmd));
     doc.append(bsoncxx::builder::basic::kvp("UC1_SwitchRealState", payload.UC1_SwitchRealState));
     doc.append(bsoncxx::builder::basic::kvp("UC1_SwitchFlagState", payload.UC1_SwitchFlagState));
-    doc.append(bsoncxx::builder::basic::kvp("DisableFaultPowerFDIR", payload.DisableFaultPowerFDIR));
+    doc.append(
+            bsoncxx::builder::basic::kvp("DisableFaultPowerFDIR", static_cast<int32_t>(payload.DisableFaultPowerFDIR)));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP12(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP12(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP12"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     doc.append(bsoncxx::builder::basic::kvp("MMHMR1_X", payload.MMHMR1_X));
     doc.append(bsoncxx::builder::basic::kvp("MMHMR1_Y", payload.MMHMR1_Y));
     doc.append(bsoncxx::builder::basic::kvp("MMHMR1_Z", payload.MMHMR1_Z));
@@ -622,7 +650,7 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP12(co
     doc.append(bsoncxx::builder::basic::kvp("GPS_number", payload.GPS_number));
     doc.append(bsoncxx::builder::basic::kvp("GPS_State", payload.GPS_State));
     doc.append(bsoncxx::builder::basic::kvp("GPS_Temperature", payload.GPS_Temperature));
-    doc.append(bsoncxx::builder::basic::kvp("TOW", payload.TOW));
+    doc.append(bsoncxx::builder::basic::kvp("TOW", static_cast<int32_t >(payload.TOW)));
     doc.append(bsoncxx::builder::basic::kvp("WeakNumber", payload.WeakNumber));
     doc.append(bsoncxx::builder::basic::kvp("UTC_Offset", payload.UTC_Offset));
     doc.append(bsoncxx::builder::basic::kvp("GPSLatitude", payload.GPSLatitude));
@@ -657,13 +685,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP12(co
     doc.append(bsoncxx::builder::basic::kvp("GPS1_CH14_SNR", payload.GPS1_CH14_SNR));
     doc.append(bsoncxx::builder::basic::kvp("GPS1_CH15_SNR", payload.GPS1_CH15_SNR));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP13(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP13(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP13"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // GPS SNR data
     doc.append(bsoncxx::builder::basic::kvp("GPS1_CH16_SNR", payload.GPS1_CH16_SNR));
     doc.append(bsoncxx::builder::basic::kvp("GPS1_CH17_SNR", payload.GPS1_CH17_SNR));
@@ -719,13 +750,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP13(co
     doc.append(bsoncxx::builder::basic::kvp("HFP_gg", payload.HFP_gg));
     doc.append(bsoncxx::builder::basic::kvp("HFP_SS_Time", payload.HFP_SS_Time));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP14(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP14(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP14"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // HFP SS data
     doc.append(bsoncxx::builder::basic::kvp("HFP_SS_Temp", payload.HFP_SS_Temp));
     doc.append(bsoncxx::builder::basic::kvp("HFP_SS_Voltage", payload.HFP_SS_Voltage));
@@ -800,13 +834,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP14(co
     doc.append(bsoncxx::builder::basic::kvp("RWHescoRefSpeed", payload.RWHescoRefSpeed));
     doc.append(bsoncxx::builder::basic::kvp("RWHescoCur", payload.RWHescoCur));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP15(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP15(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP15"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // RWHestat Error Flag
     doc.append(bsoncxx::builder::basic::kvp("RWHestat_Err_flg", payload.RWHestat_Err_flg));
 
@@ -830,7 +867,8 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP15(co
     doc.append(bsoncxx::builder::basic::kvp("IR_Star_attitudeQ2", payload.IR_Star_attitudeQ2));
     doc.append(bsoncxx::builder::basic::kvp("IR_Star_attitudeQ3", payload.IR_Star_attitudeQ3));
     doc.append(bsoncxx::builder::basic::kvp("IR_Star_attitudeQ4", payload.IR_Star_attitudeQ4));
-    doc.append(bsoncxx::builder::basic::kvp("IR_Star_internal_time", *reinterpret_cast<const double*>(payload.bytes)));  // Converting byte array to double
+    doc.append(bsoncxx::builder::basic::kvp("IR_Star_internal_time",
+                                            *reinterpret_cast<const double *>(payload.bytes)));  // Converting byte array to double
     doc.append(bsoncxx::builder::basic::kvp("IR_StarTemp", payload.IR_StarTemp));
     doc.append(bsoncxx::builder::basic::kvp("IR_StarImage_expo_value", payload.IR_StarImage_expo_value));
     doc.append(bsoncxx::builder::basic::kvp("IR_StarImage_threshold", payload.IR_StarImage_threshold));
@@ -854,15 +892,20 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP15(co
     doc.append(bsoncxx::builder::basic::kvp("Gyro_B_Y", payload.Gyro_B_Y));
 
     // Reserved data
-    doc.append(bsoncxx::builder::basic::kvp("res_p15", bsoncxx::builder::basic::array{payload.res_p15[0], payload.res_p15[1] }));
+    bsoncxx::builder::basic::array res_p15;
+    for (int i = 0; i < 2; ++i) res_p15.append(payload.res_p15[i]);
+    doc.append(bsoncxx::builder::basic::kvp("res_p15", res_p15));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP16(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP16(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP16"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Gyro and ST attitude data
     doc.append(bsoncxx::builder::basic::kvp("Gyro_B_Z", payload.Gyro_B_Z));
     doc.append(bsoncxx::builder::basic::kvp("ST_Q1_IM", payload.ST_Q1_IM));
@@ -889,12 +932,9 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP16(co
     doc.append(bsoncxx::builder::basic::kvp("RW_CMD_Act_z", payload.RW_CMD_Act_z));
 
     // Interface manager flags (array)
-    doc.append(bsoncxx::builder::basic::kvp("interfaceManagerVariablesflags", bsoncxx::builder::basic::array{
-            payload.interfaceManagerVariablesflags[0], payload.interfaceManagerVariablesflags[1],
-            payload.interfaceManagerVariablesflags[2], payload.interfaceManagerVariablesflags[3],
-            payload.interfaceManagerVariablesflags[4], payload.interfaceManagerVariablesflags[5],
-            payload.interfaceManagerVariablesflags[6]
-    }));
+    bsoncxx::builder::basic::array interfaceManagerVariablesflags;
+    for (int i = 0; i < 7; ++i) interfaceManagerVariablesflags.append(payload.interfaceManagerVariablesflags[i]);
+    doc.append(bsoncxx::builder::basic::kvp("interfaceManagerVariablesflags", interfaceManagerVariablesflags));
 
     // Estimated quaternion values
     doc.append(bsoncxx::builder::basic::kvp("q0_Estimated", payload.q0_Estimated));
@@ -902,13 +942,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP16(co
     doc.append(bsoncxx::builder::basic::kvp("q2_Estimated", payload.q2_Estimated));
     doc.append(bsoncxx::builder::basic::kvp("q3_Estimated", payload.q3_Estimated));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP17(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP17(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP17"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Estimated values for W (angular velocity) and quaternion
     doc.append(bsoncxx::builder::basic::kvp("W_X_Estimated", payload.W_X_Estimated));
     doc.append(bsoncxx::builder::basic::kvp("W_Y_Estimated", payload.W_Y_Estimated));
@@ -947,17 +990,20 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP17(co
     doc.append(bsoncxx::builder::basic::kvp("MRAM3Status", payload.MRAM3Status));
 
     // Reserved space (if necessary)
-    doc.append(bsoncxx::builder::basic::kvp("res_part17", bsoncxx::builder::basic::array{
-            payload.res_part17[0], payload.res_part17[1]
-    }));
+    bsoncxx::builder::basic::array res_part17;
+    for (int i = 0; i < 2; ++i) res_part17.append(payload.res_part17[i]);
+    doc.append(bsoncxx::builder::basic::kvp("res_part17", res_part17));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP18(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP18(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP18"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Star Gyro and EKF (Extended Kalman Filter) data
     doc.append(bsoncxx::builder::basic::kvp("q1_StarGyro", payload.q1_StarGyro));
     doc.append(bsoncxx::builder::basic::kvp("q2_StarGyro", payload.q2_StarGyro));
@@ -989,13 +1035,16 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP18(co
     doc.append(bsoncxx::builder::basic::kvp("ADCSMTDipoleZ", payload.ADCSMTDipoleZ));
     doc.append(bsoncxx::builder::basic::kvp("ADCSRWTorqueX", payload.ADCSRWTorqueX));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP19(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP19(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP19"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // ADCS (Attitude Determination and Control System) and related data
     doc.append(bsoncxx::builder::basic::kvp("ADCSRWTorqueY", payload.ADCSRWTorqueY));
     doc.append(bsoncxx::builder::basic::kvp("ADCSRWTorqueZ", payload.ADCSRWTorqueZ));
@@ -1007,11 +1056,11 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP19(co
     doc.append(bsoncxx::builder::basic::kvp("KdC", payload.KdC));
     doc.append(bsoncxx::builder::basic::kvp("KdF", payload.KdF));
     doc.append(bsoncxx::builder::basic::kvp("ADCS_JD", payload.ADCS_JD));
-    doc.append(bsoncxx::builder::basic::kvp("adcsToInterfaceManagerFlag", bsoncxx::builder::basic::array{
-            payload.adcsToInterfaceManagerFlag[0],
-            payload.adcsToInterfaceManagerFlag[1],
-            payload.adcsToInterfaceManagerFlag[2]
-    }));
+
+    bsoncxx::builder::basic::array adcsToInterfaceManagerFlag;
+    for (int i = 0; i < 3; ++i) adcsToInterfaceManagerFlag.append(payload.adcsToInterfaceManagerFlag[i]);
+    doc.append(bsoncxx::builder::basic::kvp("adcsToInterfaceManagerFlag", adcsToInterfaceManagerFlag));
+
 
     // Orbit-related data
     doc.append(bsoncxx::builder::basic::kvp("OrbitJulianDate", payload.OrbitJulianDate));
@@ -1033,23 +1082,26 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP19(co
     // Reserved field
     doc.append(bsoncxx::builder::basic::kvp("res_p19", payload.res_p19));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP20(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP20(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP20"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // IGRF (International Geomagnetic Reference Field) data in ECI frame
     doc.append(bsoncxx::builder::basic::kvp("IGRFInECI_x", payload.IGRFInECI_x));
     doc.append(bsoncxx::builder::basic::kvp("IGRFInECI_y", payload.IGRFInECI_y));
     doc.append(bsoncxx::builder::basic::kvp("IGRFInECI_z", payload.IGRFInECI_z));
 
     // Orbit data for interface manager
-    doc.append(bsoncxx::builder::basic::kvp("OrbitToInterfaceManagerFlag", bsoncxx::builder::basic::array{
-            payload.OrbitToInterfaceManagerFlag[0],
-            payload.OrbitToInterfaceManagerFlag[1]
-    }));
+    bsoncxx::builder::basic::array OrbitToInterfaceManagerFlag;
+    for (int i = 0; i < 3; ++i) OrbitToInterfaceManagerFlag.append(payload.OrbitToInterfaceManagerFlag[i]);
+    doc.append(bsoncxx::builder::basic::kvp("OrbitToInterfaceManagerFlag", OrbitToInterfaceManagerFlag));
+
 
     // Position and velocity in ECI frame (for programming/trajectory tracking)
     doc.append(bsoncxx::builder::basic::kvp("R_InECI_Prog_x", payload.R_InECI_Prog_x));
@@ -1070,20 +1122,24 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP20(co
     // Buffer norm and criteria data
     doc.append(bsoncxx::builder::basic::kvp("WBuffNorm", payload.WBuffNorm));
     doc.append(bsoncxx::builder::basic::kvp("CriteriaMode", payload.CriteriaMode));
-    doc.append(bsoncxx::builder::basic::kvp("CriteriaCounter", payload.CriteriaCounter));
+    doc.append(bsoncxx::builder::basic::kvp("CriteriaCounter", static_cast<int32_t >(payload.CriteriaCounter)));
 
     // Task ID, hardware status, and supervisor flags
     doc.append(bsoncxx::builder::basic::kvp("TaskID", payload.TaskID));
     doc.append(bsoncxx::builder::basic::kvp("hardwareStatus", payload.hardwareStatus));
-    doc.append(bsoncxx::builder::basic::kvp("supervisorToInterfaceManagerFlg", payload.supervisorToInterfaceManagerFlg));
+    doc.append(
+            bsoncxx::builder::basic::kvp("supervisorToInterfaceManagerFlg", payload.supervisorToInterfaceManagerFlg));
 
     // CPU and exception counters for OBC (Onboard Computer)
     doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_RESETCnt", payload.OS_CPU_ARM_EXCEPT_RESETCnt));
     doc.append(bsoncxx::builder::basic::kvp("ARM_EXCEPT_UNDEF_INSTRCnt", payload.ARM_EXCEPT_UNDEF_INSTRCnt));
     doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_SWICnt", payload.OS_CPU_ARM_EXCEPT_SWICnt));
-    doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_PREFETCH_ABORTCnt", payload.OS_CPU_ARM_EXCEPT_PREFETCH_ABORTCnt));
-    doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_DATA_ABORTCnt", payload.OS_CPU_ARM_EXCEPT_DATA_ABORTCnt));
-    doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_ADDR_ABORTCnt", payload.OS_CPU_ARM_EXCEPT_ADDR_ABORTCnt));
+    doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_PREFETCH_ABORTCnt",
+                                            payload.OS_CPU_ARM_EXCEPT_PREFETCH_ABORTCnt));
+    doc.append(
+            bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_DATA_ABORTCnt", payload.OS_CPU_ARM_EXCEPT_DATA_ABORTCnt));
+    doc.append(
+            bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_ADDR_ABORTCnt", payload.OS_CPU_ARM_EXCEPT_ADDR_ABORTCnt));
     doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_FIQCnt", payload.OS_CPU_ARM_EXCEPT_FIQCnt));
     doc.append(bsoncxx::builder::basic::kvp("OS_CPU_ARM_EXCEPT_OtherCnt", payload.OS_CPU_ARM_EXCEPT_OtherCnt));
 
@@ -1093,96 +1149,114 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP20(co
     doc.append(bsoncxx::builder::basic::kvp("MRAMCPUExceptionFlag", payload.MRAMCPUExceptionFlag));
 
     // Reserved field
-    doc.append(bsoncxx::builder::basic::kvp("respart19", bsoncxx::builder::basic::array{
-            payload.respart19[0], payload.respart19[1], payload.respart19[2], payload.respart19[3],
-            payload.respart19[4], payload.respart19[5], payload.respart19[6], payload.respart19[7],
-            payload.respart19[8], payload.respart19[9], payload.respart19[10], payload.respart19[11],
-            payload.respart19[12], payload.respart19[13], payload.respart19[14]
-    }));
+    bsoncxx::builder::basic::array respart19;
+    for (int i = 0; i < 15; ++i) respart19.append(payload.respart19[i]);
+    doc.append(bsoncxx::builder::basic::kvp("respart19", respart19));
 
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP21(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP21(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP21"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Serialize ID_CMD_REC_Return (array of 100 bytes)
-    doc.append(bsoncxx::builder::basic::kvp("ID_CMD_REC_Return", bsoncxx::builder::basic::array{
-            payload.ID_CMD_REC_Return[0], payload.ID_CMD_REC_Return[1], payload.ID_CMD_REC_Return[2], // ... up to 100
-            payload.ID_CMD_REC_Return[99]
-    }));
 
-    return doc;
+    bsoncxx::builder::basic::array ID_CMD_REC_Return;
+    for (int i = 0; i < 100; ++i) ID_CMD_REC_Return.append(payload.ID_CMD_REC_Return[i]);
+    doc.append(bsoncxx::builder::basic::kvp("ID_CMD_REC_Return", ID_CMD_REC_Return));
+
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP22(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP22(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP22"];
     bsoncxx::builder::basic::document doc{};
-
-    // Serialize ID_CMD_REC_Return (array of 100 bytes)
-    bsoncxx::builder::basic::array arr;
-    for (int i = 0; i < 100; ++i)
-        arr.append(static_cast<int8_t>(payload.ID_CMD_REC_Return[i]));
-    doc.append(bsoncxx::builder::basic::kvp("ID_CMD_REC_Return", arr));
-    return doc;
-}
-
-template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP23(const T payload) {
-    bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Serialize ID_CMD_REC_Return (array of 100 bytes)
     bsoncxx::builder::basic::array arr;
     for (int i = 0; i < 100; ++i)
         arr.append(static_cast<int8_t>(payload.ID_CMD_REC_Return[i]));
     doc.append(bsoncxx::builder::basic::kvp("ID_CMD_REC_Return", arr));
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP24(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP23(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP23"];
     bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
+    // Serialize ID_CMD_REC_Return (array of 100 bytes)
+    bsoncxx::builder::basic::array arr;
+    for (int i = 0; i < 100; ++i)
+        arr.append(static_cast<int8_t>(payload.ID_CMD_REC_Return[i]));
+    doc.append(bsoncxx::builder::basic::kvp("ID_CMD_REC_Return", arr));
+    collection.insert_one(doc.view());
 
+}
+
+template<typename T>
+void MongoDBHandler::serializeExtendedPayloadP24(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP24"];
+    bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
     // Serialize ID_CMD_REC_Return (array of 100 bytes)
     bsoncxx::builder::basic::array arr;
     for (int i = 0; i < 100; ++i)
         arr.append(static_cast<int8_t>(payload.ID_CMD_Executed_Return[i]));
     doc.append(bsoncxx::builder::basic::kvp("ID_CMD_Executed_Return", arr));
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP25(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP25(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP25"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Serialize ID_CMD_REC_Return (array of 100 bytes)
     bsoncxx::builder::basic::array arr;
     for (int i = 0; i < 100; ++i)
         arr.append(static_cast<int8_t>(payload.ID_CMD_Executed_Return[i]));
     doc.append(bsoncxx::builder::basic::kvp("ID_CMD_Executed_Return", arr));
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP26(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP26(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP26"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Serialize ID_CMD_REC_Return (array of 100 bytes)
     bsoncxx::builder::basic::array arr;
     for (int i = 0; i < 100; ++i)
         arr.append(static_cast<int8_t>(payload.ID_CMD_Executed_Return[i]));
     doc.append(bsoncxx::builder::basic::kvp("ID_CMD_Executed_Return", arr));
-    return doc;
+    collection.insert_one(doc.view());
+
 }
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP27(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP27(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP27"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // SETPARAM
     doc.append(bsoncxx::builder::basic::kvp("SETPARAM_VAR_TYPE", payload.SETPARAM_VAR_TYPE));
-    doc.append(bsoncxx::builder::basic::kvp("SETPARAM_MEM_ADD", payload.SETPARAM_MEM_ADD));
+    doc.append(bsoncxx::builder::basic::kvp("SETPARAM_MEM_ADD", static_cast<int32_t >(payload.SETPARAM_MEM_ADD)));
 
     bsoncxx::builder::basic::array SETPARAM_MEM_VAL_array;
     for (int i = 0; i < 8; ++i)
@@ -1190,7 +1264,7 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP27(co
     doc.append(bsoncxx::builder::basic::kvp("SETPARAM_MEM_VAL", SETPARAM_MEM_VAL_array));
 
     doc.append(bsoncxx::builder::basic::kvp("Get_Param_length", payload.Get_Param_length));
-    doc.append(bsoncxx::builder::basic::kvp("Get_param_Start_Add", payload.Get_param_Start_Add));
+    doc.append(bsoncxx::builder::basic::kvp("Get_param_Start_Add", static_cast<int32_t >(payload.Get_param_Start_Add)));
 
     bsoncxx::builder::basic::array Get_param_Value_array;
     for (int i = 0; i < 40; ++i)
@@ -1231,15 +1305,18 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP27(co
     for (int i = 0; i < 4; ++i)
         res_array.append(payload.res[i]);
     doc.append(bsoncxx::builder::basic::kvp("res", res_array));
+    collection.insert_one(doc.view());
 
-    return doc;
+
 }
 
 
 template<typename T>
-bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP28(const T payload) {
+void MongoDBHandler::serializeExtendedPayloadP28(const T payload, const CCSDS_Packet &packet) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP28"];
     bsoncxx::builder::basic::document doc{};
-
+    insertHeader(doc, packet);
     // Serialize Analog Sensors (int16_t)
     doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_1", payload.Analog_Sensor_1));
     doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_2", payload.Analog_Sensor_2));
@@ -1262,27 +1339,6 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP28(co
     doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_19", payload.Analog_Sensor_19));
     doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_20", payload.Analog_Sensor_20));
 
-    // Serialize more Analog Sensors (int16_t)
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_21", payload.Analog_Sensor_21));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_22", payload.Analog_Sensor_22));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_23", payload.Analog_Sensor_23));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_24", payload.Analog_Sensor_24));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_25", payload.Analog_Sensor_25));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_26", payload.Analog_Sensor_26));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_27", payload.Analog_Sensor_27));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_28", payload.Analog_Sensor_28));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_29", payload.Analog_Sensor_29));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_30", payload.Analog_Sensor_30));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_31", payload.Analog_Sensor_31));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_32", payload.Analog_Sensor_32));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_33", payload.Analog_Sensor_33));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_34", payload.Analog_Sensor_34));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_35", payload.Analog_Sensor_35));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_36", payload.Analog_Sensor_36));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_37", payload.Analog_Sensor_37));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_38", payload.Analog_Sensor_38));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_39", payload.Analog_Sensor_39));
-    doc.append(bsoncxx::builder::basic::kvp("Analog_Sensor_40", payload.Analog_Sensor_40));
 
     // Serialize Temp Sensors (int8_t)
     doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor1", payload.Temp_Sensor1));
@@ -1325,6 +1381,15 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP28(co
     doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor34", payload.Temp_Sensor34));
     doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor35", payload.Temp_Sensor35));
     doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor36", payload.Temp_Sensor36));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor37", payload.Temp_Sensor37));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor38", payload.Temp_Sensor38));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor39", payload.Temp_Sensor39));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor40", payload.Temp_Sensor40));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor41", payload.Temp_Sensor41));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor42", payload.Temp_Sensor42));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor43", payload.Temp_Sensor43));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor44", payload.Temp_Sensor44));
+    doc.append(bsoncxx::builder::basic::kvp("Temp_Sensor45", payload.Temp_Sensor45));
 
     // Serialize prop_Status, prop_TankTemp, prop_PlenumTemp, prop_TankPressure, prop_PlenumPressure
     doc.append(bsoncxx::builder::basic::kvp("prop_Status", payload.prop_Status));
@@ -1340,6 +1405,7 @@ bsoncxx::builder::basic::document MongoDBHandler::serializeExtendedPayloadP28(co
     doc.append(bsoncxx::builder::basic::kvp("prop_Delay2", payload.prop_Delay2));
     doc.append(bsoncxx::builder::basic::kvp("prop_PWM1", payload.prop_PWM1));
     doc.append(bsoncxx::builder::basic::kvp("prop_PWM2", payload.prop_PWM2));
+    collection.insert_one(doc.view());
 
-    return doc;
+
 }

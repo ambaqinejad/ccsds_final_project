@@ -23,66 +23,67 @@ public:
 private:
     mongocxx::client client;
     mongocxx::database database;
-    mongocxx::collection collection;
+    
 
     // Helper to serialize extended payloads
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP1(const T payload);
+    void serializeExtendedPayloadP1(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP2(const T payload);
+    void serializeExtendedPayloadP2(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP3(const T payload);
+    void serializeExtendedPayloadP3(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP4(const T payload);
+    void serializeExtendedPayloadP4(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP5(const T payload);
+    void serializeExtendedPayloadP5(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP6(const T payload);
+    void serializeExtendedPayloadP6(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP7(const T payload);
+    void serializeExtendedPayloadP7(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP8(const T payload);
+    void serializeExtendedPayloadP8(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP9(const T payload);
+    void serializeExtendedPayloadP9(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP10(const T payload);
+    void serializeExtendedPayloadP10(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP11(const T payload);
+    void serializeExtendedPayloadP11(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP12(const T payload);
+    void serializeExtendedPayloadP12(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP13(const T payload);
+    void serializeExtendedPayloadP13(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP14(const T payload);
+    void serializeExtendedPayloadP14(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP15(const T payload);
+    void serializeExtendedPayloadP15(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP16(const T payload);
+    void serializeExtendedPayloadP16(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP17(const T payload);
+    void serializeExtendedPayloadP17(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP18(const T payload);
+    void serializeExtendedPayloadP18(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP19(const T payload);
+    void serializeExtendedPayloadP19(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP20(const T payload);
+    void serializeExtendedPayloadP20(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP21(const T payload);
+    void serializeExtendedPayloadP21(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP22(const T payload);
+    void serializeExtendedPayloadP22(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP23(const T payload);
+    void serializeExtendedPayloadP23(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP24(const T payload);
+    void serializeExtendedPayloadP24(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP25(const T payload);
+    void serializeExtendedPayloadP25(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP26(const T payload);
+    void serializeExtendedPayloadP26(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP27(const T payload);
+    void serializeExtendedPayloadP27(const T payload, const CCSDS_Packet& packet);
     template <typename T>
-    bsoncxx::builder::basic::document serializeExtendedPayloadP28(const T payload);
+    void serializeExtendedPayloadP28(const T payload, const CCSDS_Packet& packet);
 
+    void insertHeader(bsoncxx::builder::basic::document& document, const CCSDS_Packet &packet);
 };
 
 
