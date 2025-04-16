@@ -27,6 +27,8 @@ add_executable(${PROJECT_NAME} main.cc
         logics/SIDs.h
         database/MongoDBHandler.cpp
         database/MongoDBHandler.h
+        database/CSVHandler.cpp
+        database/CSVHandler.h
 )
 
 # ##############################################################################
