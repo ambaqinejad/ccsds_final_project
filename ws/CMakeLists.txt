@@ -29,6 +29,12 @@ add_executable(${PROJECT_NAME} main.cc
         database/MongoDBHandler.h
         database/CSVHandler.cpp
         database/CSVHandler.h
+        helpers/CCSDSPacketFileHelper.cpp
+        helpers/CCSDSPacketFileHelper.h
+        helpers/ClientCommunicationHelper.cpp
+        helpers/ClientCommunicationHelper.h
+        helpers/UIDGeneratorHelper.cpp
+        helpers/UIDGeneratorHelper.h
 )
 
 # ##############################################################################
@@ -65,6 +71,7 @@ aux_source_directory(models MODEL_SRC)
 aux_source_directory(logics LOGIC_SRC)
 aux_source_directory(database DB_SRC)
 aux_source_directory(threads THREAD_SRC)
+aux_source_directory(helpers HELPERS_SRC)
 
 drogon_create_views(${PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/views
                     ${CMAKE_CURRENT_BINARY_DIR})
@@ -88,6 +95,7 @@ target_sources(${PROJECT_NAME}
                ${LOGIC_SRC}
                ${DB_SRC}
                ${THREAD_SRC}
+               ${HELPERS_SRC}
                ${MODEL_SRC})
 # ##############################################################################
 # uncomment the following line for dynamically loading views 
