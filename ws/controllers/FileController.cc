@@ -27,7 +27,7 @@ void FileController::uploadFile(const HttpRequestPtr &req, std::function<void(co
     file.setFileName(fileUUID);
     file.save();
     string filePath = "uploads/" + file.getFileName();
-    msg["uuid"] = fileUUID;
+    msg["fileUUID"] = fileUUID;
     msg["msg"] = "The uploaded file has been saved in path " + filePath;
     auto resp = HttpResponse::newHttpJsonResponse(msg);
     thread([filePath, fileUUID]() { CCSDSPacketFileHelper::processFile(filePath, fileUUID); }).detach();

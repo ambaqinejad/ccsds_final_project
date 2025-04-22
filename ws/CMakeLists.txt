@@ -35,6 +35,8 @@ add_executable(${PROJECT_NAME} main.cc
         helpers/ClientCommunicationHelper.h
         helpers/UIDGeneratorHelper.cpp
         helpers/UIDGeneratorHelper.h
+        helpers/ControllerErrorHelper.cpp
+        helpers/ControllerErrorHelper.h
 )
 
 # ##############################################################################

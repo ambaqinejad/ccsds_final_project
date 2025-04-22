@@ -218,3 +218,33 @@ void CCSDS_Packet::printPacket() const {
     // }
     // cout << dec << endl;
 }
+
+Json::Value CCSDS_Packet::toJson() const {
+    Json::Value json;
+
+    json["main_frame_header"] = main_frame_header;
+    json["packet_id"] = packet_id;
+    json["packet_sequence_control"] = packet_sequence_control;
+    json["packet_length"] = packet_length;
+    json["data_field_header"] = data_field_header;
+    json["service_type"] = service_type;
+    json["sub_service_type"] = sub_service_type;
+    json["sid"] = sid;
+    json["timestamp"] = Json::UInt64(timestamp);
+    json["crc_fail_upload_map"] = Json::UInt64(crc_fail_upload_map);
+    json["flash_address"] = flash_address;
+
+    // Optional: Dump payload as hex or array
+    Json::Value payloadArray(Json::arrayValue);
+    for (const auto &byte : payload) {
+        payloadArray.append(byte); // or format as hex
+    }
+    json["payload"] = payloadArray;
+
+    // Optional: Handle extended_payload if you want to serialize it
+    if (!std::holds_alternative<std::monostate>(extended_payload)) {
+        json["extended_payload"] = "Parsed data"; // placeholder - depends on your types
+    }
+
+    return json;
+}

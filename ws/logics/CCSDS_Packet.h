@@ -6,6 +6,7 @@
 #include <vector>
 #include <variant>
 #include <memory>
+#include <json/value.h>
 
 #include "SIDs.h"
 
@@ -21,14 +22,6 @@ using ExtendedPayload = std::variant<
 
 class CCSDS_Packet {
 public:
-    // [[nodiscard]] uint16_t getSequence() const;
-    // void setSequence(uint16_t sequence);
-    // [[nodiscard]] uint16_t getLength() const;
-    // void setLength(uint16_t length);
-    // [[nodiscard]] const vector<uint8_t> &getPayload() const;
-    // void setPayload(const vector<uint8_t> &payload);
-    // [[nodiscard]] uint16_t getHeader() const;
-    // void setHeader(uint16_t header);
 
     // Constructor
     CCSDS_Packet();
@@ -42,7 +35,10 @@ public:
     // Display Parsed Packet Data
     void printPacket() const;
 
-// private:
+    [[nodiscard]] Json::Value toJson() const;
+
+
+    // private:
     uint16_t main_frame_header;
     uint16_t packet_id;
     uint16_t packet_sequence_control;
