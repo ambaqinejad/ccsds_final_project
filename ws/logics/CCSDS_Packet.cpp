@@ -220,31 +220,56 @@ void CCSDS_Packet::printPacket() const {
 }
 
 Json::Value CCSDS_Packet::toJson() const {
-    Json::Value json;
+    Json::Value msg;
+    std::stringstream ss;
+    ss << std::hex << std::uppercase << std::setfill('0');
 
-    json["main_frame_header"] = main_frame_header;
-    json["packet_id"] = packet_id;
-    json["packet_sequence_control"] = packet_sequence_control;
-    json["packet_length"] = packet_length;
-    json["data_field_header"] = data_field_header;
-    json["service_type"] = service_type;
-    json["sub_service_type"] = sub_service_type;
-    json["sid"] = sid;
-    json["timestamp"] = Json::UInt64(timestamp);
-    json["crc_fail_upload_map"] = Json::UInt64(crc_fail_upload_map);
-    json["flash_address"] = flash_address;
+    auto formatHex = [&](int value, int width = 2) {
+        ss.str("");
+        ss.clear();
+        ss << std::setw(width) << (value & 0xFF);
+        return ss.str();
+    };
+
+    msg["main_frame_header"] = formatHex((main_frame_header >> 8) & 0xFF) + " " + formatHex(main_frame_header & 0xFF);
+    msg["packet_id"] = formatHex((packet_id >> 8) & 0xFF) + " " + formatHex(packet_id & 0xFF);
+    msg["packet_sequence_control"] = formatHex((packet_sequence_control >> 8) & 0xFF) + " " + formatHex(packet_sequence_control & 0xFF);
+    msg["packet_length"] = formatHex((packet_length >> 8) & 0xFF) + " " + formatHex(packet_length & 0xFF);
+    msg["data_field_header"] = formatHex(data_field_header);
+    msg["service_type"] = formatHex(service_type);
+    msg["sub_service_type"] = formatHex(sub_service_type);
+    msg["sid"] = formatHex(sub_service_type);
+
+    msg["timestamp"] = formatHex((timestamp >> 24) & 0xFF) + " " +
+                       formatHex((timestamp >> 16) & 0xFF) + " " +
+                       formatHex((timestamp >> 8) & 0xFF) + " " +
+                       formatHex(timestamp & 0xFF);
+
+    msg["crc_fail_upload_map"] = formatHex((crc_fail_upload_map >> 56) & 0xFF) + " " +
+                                 formatHex((crc_fail_upload_map >> 48) & 0xFF) + " " +
+                                 formatHex((crc_fail_upload_map >> 40) & 0xFF) + " " +
+                                 formatHex((crc_fail_upload_map >> 32) & 0xFF) + " " +
+                                 formatHex((crc_fail_upload_map >> 24) & 0xFF) + " " +
+                                 formatHex((crc_fail_upload_map >> 16) & 0xFF) + " " +
+                                 formatHex((crc_fail_upload_map >> 8) & 0xFF) + " " +
+                                 formatHex(crc_fail_upload_map & 0xFF);
+
+    msg["flash_address"] = formatHex((flash_address >> 24) & 0xFF) + " " +
+                           formatHex((flash_address >> 16) & 0xFF) + " " +
+                           formatHex((flash_address >> 8) & 0xFF) + " " +
+                           formatHex(flash_address & 0xFF);
 
     // Optional: Dump payload as hex or array
     Json::Value payloadArray(Json::arrayValue);
     for (const auto &byte : payload) {
         payloadArray.append(byte); // or format as hex
     }
-    json["payload"] = payloadArray;
+    msg["payload"] = payloadArray;
 
     // Optional: Handle extended_payload if you want to serialize it
     if (!std::holds_alternative<std::monostate>(extended_payload)) {
-        json["extended_payload"] = "Parsed data"; // placeholder - depends on your types
+        msg["extended_payload"] = "Parsed data"; // placeholder - depends on your types
     }
 
-    return json;
+    return msg;
 }

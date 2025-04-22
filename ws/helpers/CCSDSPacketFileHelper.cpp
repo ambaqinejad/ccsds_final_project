@@ -70,7 +70,6 @@ void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, 
         if (i % eachTimeNotifyClients == 0) {
             ClientCommunicationHelper::notifyClients(progress, packet);
         }
-//        dbHandler.insertPacket(packet);
     }
     CCSDSPacketFileHelper::uuidToSavedPacketsMapper[fileUUID] = packets;
 }

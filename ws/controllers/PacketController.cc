@@ -2,6 +2,7 @@
 #include "helpers/ControllerErrorHelper.h"
 #include "logics/CCSDS_Packet.h"
 #include "helpers/CCSDSPacketFileHelper.h"
+#include "database/MongoDBHandler.h"
 
 // Add definition of your processing function here
 void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
@@ -75,4 +76,52 @@ void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
         ControllerErrorHelper::sendError(std::move(callback), k400BadRequest, "Invalid sid or page or pageSize parameter.");
     }
 
+}
+
+void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
+                                                  function<void(const HttpResponsePtr &)> &&callback) const {
+    MongoDBHandler dbHandler;
+    std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
+    auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
+    if (it == CCSDSPacketFileHelper::uuidToSavedPacketsMapper.end())
+    {
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
+    }
+
+    const std::vector<CCSDS_Packet> &allPackets = it->second;
+    for (CCSDS_Packet packet: allPackets) {
+        dbHandler.insertPacket(packet);
+    }
+    Json::Value pktJson;
+    pktJson["message"] = "Packets inserted successfully.";
+    auto resp = HttpResponse::newHttpJsonResponse(pktJson);
+    callback(resp);
+}
+
+void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr &req,
+                                                            function<void(const HttpResponsePtr &)> &&callback) const {
+    MongoDBHandler dbHandler;
+    std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
+    auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
+    if (it == CCSDSPacketFileHelper::uuidToSavedPacketsMapper.end())
+    {
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
+    }
+
+    const std::vector<CCSDS_Packet> &allPackets = it->second;
+    std::vector<CCSDS_Packet> filteredPackets;
+    for (const auto &pkt : allPackets)
+    {
+        if (pkt.sid == _sid) // assuming CCSDS_Packet has a `sid` field
+        {
+            filteredPackets.push_back(pkt);
+        }
+    }
+    for (CCSDS_Packet packet: allPackets) {
+        dbHandler.insertPacket(packet);
+    }
+    Json::Value pktJson;
+    pktJson["message"] = "Packets inserted successfully.";
+    auto resp = HttpResponse::newHttpJsonResponse(pktJson);
+    callback(resp);
 }
