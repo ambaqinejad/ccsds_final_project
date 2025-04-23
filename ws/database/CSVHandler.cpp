@@ -270,204 +270,104 @@ void CSVHandler::serializeExtendedPayloadP5(const T payload, const CCSDS_Packet 
     file.close();
 }
 
-
 template<typename T>
 void CSVHandler::serializeExtendedPayloadP6(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
-    mongocxx::collection collection;
-    collection = database["ExtendedPayloadP6"];
-    bsoncxx::builder::basic::document doc{};
-    insertHeader(doc, packet);
-    bsoncxx::builder::basic::array pmu_array;
-    for (int i = 0; i < 100; ++i) {
-        pmu_array.append(static_cast<uint8_t>(payload.PMU2[i]));
-    }
+    // Write the header (column label) for PMU1
+    file << "PMU2\n";
 
-    doc.append(bsoncxx::builder::basic::kvp("PMU2", pmu_array));
+    // Serialize the PMU1 array into a single string
+    std::string pmu1Data = writeArray(payload.PMU2, 100);
 
-    collection.insert_one(doc.view());
+    // Write the serialized PMU1 array as a single entry in the CSV
+    file << pmu1Data << "\n";
 
+    file.close();
 }
 
 template<typename T>
 void CSVHandler::serializeExtendedPayloadP7(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
-    mongocxx::collection collection;
-    collection = database["ExtendedPayloadP7"];
-    bsoncxx::builder::basic::document doc{};
-    insertHeader(doc, packet);
+    // Write the header (column label) for PMU1
+    file << "PMU3\n";
 
-    bsoncxx::builder::basic::array pmu_array;
-    for (int i = 0; i < 100; ++i) {
-        pmu_array.append(static_cast<uint8_t>(payload.PMU3[i]));
-    }
+    // Serialize the PMU1 array into a single string
+    std::string pmu1Data = writeArray(payload.PMU3, 100);
 
-    doc.append(bsoncxx::builder::basic::kvp("PMU3", pmu_array));
-    collection.insert_one(doc.view());
+    // Write the serialized PMU1 array as a single entry in the CSV
+    file << pmu1Data << "\n";
 
-
+    file.close();
 }
 
 template<typename T>
 void CSVHandler::serializeExtendedPayloadP8(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
-    mongocxx::collection collection;
-    collection = database["ExtendedPayloadP8"];
-    bsoncxx::builder::basic::document doc{};
-    insertHeader(doc, packet);
-    doc.append(bsoncxx::builder::basic::kvp("FDIRReportFlags", static_cast<int32_t>(payload.FDIRReportFlags)));
-    doc.append(
-            bsoncxx::builder::basic::kvp("FDIROverCurrentReport",
-                                         static_cast<int32_t>(payload.FDIROverCurrentReport)));
-    doc.append(bsoncxx::builder::basic::kvp("OBCConfigReport", static_cast<int32_t>(payload.OBCConfigReport)));
+    // Write the header (column labels) for the CSV
+    file << "FDIRReportFlags,FDIROverCurrentReport,OBCConfigReport,SFResetCnt,CBResetCnt,IRPDUResetCnt,Sun1DevStatus,Sun2DevStatus,Sun3DevStatus,Sun4DevStatus,Sun5DevStatus,Sun6DevStatus,Gyro1DevStatus,Gyro2DevStatus,RW1DevStatus,RW2DevStatus,RW3DevStatus,RW4DevStatus,RW5DevStatus,StarTrackerDevStatus,IRStarTrackerDevStatus,CameraLCCDevStatus,UVBandDevStatus,MT_Isis5vDevStatus,MT_Isis33vDevStatus,MT_HescoDevStatus,XBand5vDevStatus,XBandVBatDevStatus,MM_HMR1DevStatus,MM_HMR2DevStatus,SBandRxDevStatus,SBandTxDevStatus,SIGINTDevStatus,GPS1DevStatus,GPS2DevStatus,PRP8vDevStatus,PRP12vDevStatus,TempSensorDevStatus,BatteryHeaterDevStatus,Onewire1DevStatus,Onewire2DevStatus,NandCommandFlag,NandInitFlag,MMC_InitFlag,PRPNumberSample,FreeRunningCnt1,FreeRunningCnt2,CB1Temprature,CAMTemprature1,CAMTemprature2,CB2Temprature1,CB2Temprature2,PRPTimeSampling,processSPIDataPacketErrorCnt,RWDevID\n";
 
-    doc.append(bsoncxx::builder::basic::kvp("SFResetCnt", payload.SFResetCnt));
-    doc.append(bsoncxx::builder::basic::kvp("CBResetCnt", payload.CBResetCnt));
-    doc.append(bsoncxx::builder::basic::kvp("IRPDUResetCnt", payload.IRPDUResetCnt));
-    doc.append(bsoncxx::builder::basic::kvp("Sun1DevStatus", payload.Sun1DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Sun2DevStatus", payload.Sun2DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Sun3DevStatus", payload.Sun3DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Sun4DevStatus", payload.Sun4DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Sun5DevStatus", payload.Sun5DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Sun6DevStatus", payload.Sun6DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Gyro1DevStatus", payload.Gyro1DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Gyro2DevStatus", payload.Gyro2DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("RW1DevStatus", payload.RW1DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("RW2DevStatus", payload.RW2DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("RW3DevStatus", payload.RW3DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("RW4DevStatus", payload.RW4DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("RW5DevStatus", payload.RW5DevStatus));
+    // Serialize the fields and write them to the CSV file
+    file << static_cast<int32_t>(payload.FDIRReportFlags) << ",";
+    file << static_cast<int32_t>(payload.FDIROverCurrentReport) << ",";
+    file << static_cast<int32_t>(payload.OBCConfigReport) << ",";
+    file << payload.SFResetCnt << ",";
+    file << payload.CBResetCnt << ",";
+    file << payload.IRPDUResetCnt << ",";
+    file << payload.Sun1DevStatus << ",";
+    file << payload.Sun2DevStatus << ",";
+    file << payload.Sun3DevStatus << ",";
+    file << payload.Sun4DevStatus << ",";
+    file << payload.Sun5DevStatus << ",";
+    file << payload.Sun6DevStatus << ",";
+    file << payload.Gyro1DevStatus << ",";
+    file << payload.Gyro2DevStatus << ",";
+    file << payload.RW1DevStatus << ",";
+    file << payload.RW2DevStatus << ",";
+    file << payload.RW3DevStatus << ",";
+    file << payload.RW4DevStatus << ",";
+    file << payload.RW5DevStatus << ",";
+    file << payload.StarTrackerDevStatus << ",";
+    file << payload.IRStarTrackerDevStatus << ",";
+    file << payload.CameraLCCDevStatus << ",";
+    file << payload.UVBandDevStatus << ",";
+    file << payload.MT_Isis5vDevStatus << ",";
+    file << payload.MT_Isis33vDevStatus << ",";
+    file << payload.MT_HescoDevStatus << ",";
+    file << payload.XBand5vDevStatus << ",";
+    file << payload.XBandVBatDevStatus << ",";
+    file << payload.MM_HMR1DevStatus << ",";
+    file << payload.MM_HMR2DevStatus << ",";
+    file << payload.SBandRxDevStatus << ",";
+    file << payload.SBandTxDevStatus << ",";
+    file << payload.SIGINTDevStatus << ",";
+    file << payload.GPS1DevStatus << ",";
+    file << payload.GPS2DevStatus << ",";
+    file << payload.PRP8vDevStatus << ",";
+    file << payload.PRP12vDevStatus << ",";
+    file << payload.TempSensorDevStatus << ",";
+    file << payload.BatteryHeaterDevStatus << ",";
+    file << payload.Onewire1DevStatus << ",";
+    file << payload.Onewire2DevStatus << ",";
+    file << payload.NandCommandFlag << ",";
+    file << payload.NandInitFlag << ",";
+    file << payload.MMC_InitFlag << ",";
+    file << payload.PRPNumberSample << ",";
+    file << payload.FreeRunningCnt1 << ",";
+    file << payload.FreeRunningCnt2 << ",";
+    file << payload.CB1Temprature << ",";
+    file << payload.CAMTemprature1 << ",";
+    file << payload.CAMTemprature2 << ",";
+    file << payload.CB2Temprature1 << ",";
+    file << payload.CB2Temprature2 << ",";
+    file << payload.PRPTimeSampling << ",";
+    file << payload.processSPIDataPacketErrorCnt << ",";
 
-    doc.append(bsoncxx::builder::basic::kvp("StarTrackerDevStatus", payload.StarTrackerDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("IRStarTrackerDevStatus", payload.IRStarTrackerDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("CameraLCCDevStatus", payload.CameraLCCDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("UVBandDevStatus", payload.UVBandDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("MT_Isis5vDevStatus", payload.MT_Isis5vDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("MT_Isis33vDevStatus", payload.MT_Isis33vDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("MT_HescoDevStatus", payload.MT_HescoDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("XBand5vDevStatus", payload.XBand5vDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("XBandVBatDevStatus", payload.XBandVBatDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("MM_HMR1DevStatus", payload.MM_HMR1DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("MM_HMR2DevStatus", payload.MM_HMR2DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("SBandRxDevStatus", payload.SBandRxDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("SBandTxDevStatus", payload.SBandTxDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("SIGINTDevStatus", payload.SIGINTDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("GPS1DevStatus", payload.GPS1DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("GPS2DevStatus", payload.GPS2DevStatus));
+    // Serialize the RWDevID array into a single entry
+    std::string rwDevIdData = writeArray(payload.RWDevID, 4);
+    file << rwDevIdData << "\n";
 
-    doc.append(bsoncxx::builder::basic::kvp("PRP8vDevStatus", payload.PRP8vDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("PRP12vDevStatus", payload.PRP12vDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("TempSensorDevStatus", payload.TempSensorDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("BatteryHeaterDevStatus", payload.BatteryHeaterDevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Onewire1DevStatus", payload.Onewire1DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("Onewire2DevStatus", payload.Onewire2DevStatus));
-    doc.append(bsoncxx::builder::basic::kvp("NandCommandFlag", payload.NandCommandFlag));
-    doc.append(bsoncxx::builder::basic::kvp("NandInitFlag", payload.NandInitFlag));
-    doc.append(bsoncxx::builder::basic::kvp("MMC_InitFlag", payload.MMC_InitFlag));
-    doc.append(bsoncxx::builder::basic::kvp("PRPNumberSample", payload.PRPNumberSample));
-    doc.append(bsoncxx::builder::basic::kvp("FreeRunningCnt1", payload.FreeRunningCnt1));
-    doc.append(bsoncxx::builder::basic::kvp("FreeRunningCnt2", payload.FreeRunningCnt2));
-
-    doc.append(bsoncxx::builder::basic::kvp("CB1Temprature", payload.CB1Temprature));
-    doc.append(bsoncxx::builder::basic::kvp("CAMTemprature1", payload.CAMTemprature1));
-    doc.append(bsoncxx::builder::basic::kvp("CAMTemprature2", payload.CAMTemprature2));
-    doc.append(bsoncxx::builder::basic::kvp("CB2Temprature1", payload.CB2Temprature1));
-    doc.append(bsoncxx::builder::basic::kvp("CB2Temprature2", payload.CB2Temprature2));
-    doc.append(bsoncxx::builder::basic::kvp("PRPTimeSampling", payload.PRPTimeSampling));
-
-    // Packed bitfield group (flattened here)
-//    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part1", payload.NumberOfResetPMUConnection));
-//    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part2", payload.MMCBlkCnt));
-//    doc.append(bsoncxx::builder::basic::kvp("MMC_WriteErrors", payload.MMC_WriteErrors));
-    doc.append(bsoncxx::builder::basic::kvp("processSPIDataPacketErrorCnt", payload.processSPIDataPacketErrorCnt));
-
-    bsoncxx::builder::basic::array rw_dev_id_array;
-    for (int i = 0; i < 4; ++i) {
-        rw_dev_id_array.append(static_cast<uint8_t>(payload.RWDevID[i]));
-    }
-    doc.append(bsoncxx::builder::basic::kvp("RWDevID", rw_dev_id_array));
-    collection.insert_one(doc.view());
-
-
+    file.close();
 }
 
-template<typename T>
-void CSVHandler::serializeExtendedPayloadP9(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
-    mongocxx::collection collection;
-    collection = database["ExtendedPayloadP9"];
-    bsoncxx::builder::basic::document doc{};
-    insertHeader(doc, packet);
-    // UC1_SunReceiveCnt
-    bsoncxx::builder::basic::array uc1_sun_receive;
-    for (int i = 0; i < 3; ++i) {
-        uc1_sun_receive.append(payload.UC1_SunReceiveCnt[i]);
-    }
-    doc.append(bsoncxx::builder::basic::kvp("UC1_SunReceiveCnt", uc1_sun_receive));
 
-    doc.append(bsoncxx::builder::basic::kvp("UC2_LastGetTime", payload.UC2_LastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("UC2_TransmitCnt", payload.UC2_TransmitCnt));
-    doc.append(bsoncxx::builder::basic::kvp("UC2_SFReceiveCnt", payload.UC2_SFReceiveCnt));
-    doc.append(bsoncxx::builder::basic::kvp("UC2_SwitchCmd", payload.UC2_SwitchCmd));
-    doc.append(bsoncxx::builder::basic::kvp("UC2_SwitchRealState", payload.UC2_SwitchRealState));
-    doc.append(bsoncxx::builder::basic::kvp("UC2_SwitchFlagState", payload.UC2_SwitchFlagState));
 
-    // UC2_SunReceiveCnt
-    bsoncxx::builder::basic::array uc2_sun_receive;
-    for (int i = 0; i < 3; ++i) {
-        uc2_sun_receive.append(payload.UC2_SunReceiveCnt[i]);
-    }
-    doc.append(bsoncxx::builder::basic::kvp("UC2_SunReceiveCnt", uc2_sun_receive));
-
-    doc.append(bsoncxx::builder::basic::kvp("HE_durationProcess", payload.HE_durationProcess));
-    doc.append(bsoncxx::builder::basic::kvp("HE_SFduration", payload.HE_SFduration));
-
-    // HE_OBCTaskRunning
-    bsoncxx::builder::basic::array obc_tasks;
-    for (int i = 0; i < 32; ++i) {
-        obc_tasks.append(payload.HE_OBCTaskRunning[i]);
-    }
-    doc.append(bsoncxx::builder::basic::kvp("HE_OBCTaskRunning", obc_tasks));
-
-    doc.append(bsoncxx::builder::basic::kvp("Heater33vTimer", payload.Heater33vTimer));
-    doc.append(bsoncxx::builder::basic::kvp("OAPPowerDisipation", payload.OAPPowerDisipation));
-    doc.append(bsoncxx::builder::basic::kvp("HE_SPIGetCounter", payload.HE_SPIGetCounter));
-
-    // HE_MRAMCnt
-    bsoncxx::builder::basic::array mram_cnt;
-    for (int i = 0; i < 3; ++i) {
-        mram_cnt.append(payload.HE_MRAMCnt[i]);
-    }
-    doc.append(bsoncxx::builder::basic::kvp("HE_MRAMCnt", mram_cnt));
-
-    doc.append(bsoncxx::builder::basic::kvp("HE_ObcCounter", static_cast<int32_t>(payload.HE_ObcCounter)));
-
-    // RTC times
-    bsoncxx::builder::basic::array rtc1, rtc2, rtc3;
-    for (int i = 0; i < 3; ++i) {
-        rtc1.append(payload.HE_RTCTime1[i]);
-        rtc2.append(payload.HE_RTCTime2[i]);
-        rtc3.append(payload.HE_RTCTime3[i]);
-    }
-    doc.append(bsoncxx::builder::basic::kvp("HE_RTCTime1", rtc1));
-    doc.append(bsoncxx::builder::basic::kvp("HE_RTCTime2", rtc2));
-    doc.append(bsoncxx::builder::basic::kvp("HE_RTCTime3", rtc3));
-
-    doc.append(bsoncxx::builder::basic::kvp("HE_JulianDate", payload.HE_JulianDate));
-
-    doc.append(bsoncxx::builder::basic::kvp("RW1TimeSetCommand", payload.RW1TimeSetCommand));
-    doc.append(bsoncxx::builder::basic::kvp("RW1LastGetTime", payload.RW1LastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("RW2TimeSetCommand", payload.RW2TimeSetCommand));
-    doc.append(bsoncxx::builder::basic::kvp("RW2LastGetTime", payload.RW2LastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("RW3TimeSetCommand", payload.RW3TimeSetCommand));
-    doc.append(bsoncxx::builder::basic::kvp("RW3LastGetTime", payload.RW3LastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("RW4TimeSetCommand", payload.RW4TimeSetCommand));
-
-    doc.append(bsoncxx::builder::basic::kvp("SunIRLastGetTime", payload.SunIRLastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("RWRLastGetTime", payload.RWRLastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("StarIRLastGetTime", payload.StarIRLastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("HescoLastGetTime", payload.HescoLastGetTime));
-    doc.append(bsoncxx::builder::basic::kvp("BatteryFreeRunning", payload.BatteryFreeRunning));
-
-    collection.insert_one(doc.view());
-
-}
 
 template<typename T>
 void CSVHandler::serializeExtendedPayloadP10(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
