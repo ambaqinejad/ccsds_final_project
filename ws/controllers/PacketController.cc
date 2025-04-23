@@ -130,9 +130,22 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
             filteredPackets.push_back(pkt);
         }
     }
-    for (CCSDS_Packet packet: filteredPackets) {
-        dbHandler.insertPacket(packet);
-    }
+    auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
+    thread([packetsCopy]() {
+        MongoDBHandler dbHandler;
+        int eachTimeNotifyClients = packetsCopy->size() / 10;
+        for (size_t i = 0; i < packetsCopy->size(); ++i) {
+
+            auto packet = packetsCopy->at(i);
+            int progress = std::ceil(((double)i / packetsCopy->size()) * 100);
+
+            dbHandler.insertPacket(packet);
+            if (i % eachTimeNotifyClients == 0) {
+                ClientCommunicationHelper::notifyClients(progress, packet);
+            }
+        }
+
+    }).detach();
     Json::Value pktJson;
     pktJson["message"] = "Packets inserted successfully.";
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);

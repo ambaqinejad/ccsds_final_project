@@ -4,13 +4,6 @@
 
 #ifndef FINAL_PROJECT_CSVHANDLER_H
 #define FINAL_PROJECT_CSVHANDLER_H
-
-#include <mongocxx/instance.hpp>
-#include <mongocxx/uri.hpp>
-#include <mongocxx/client.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
-#include <bsoncxx/json.hpp>
-
 #include "logics/CCSDS_Packet.h"
 
 
@@ -21,9 +14,7 @@ public:
     void insertPacket(const CCSDS_Packet &packet);
 
 private:
-    mongocxx::client client;
-    mongocxx::database database;
-
+    std::string csvFilePath;
 
     // Helper to serialize extended payloads
     template <typename T>
@@ -83,7 +74,7 @@ private:
     template <typename T>
     void serializeExtendedPayloadP28(const T payload, const CCSDS_Packet& packet);
 
-    void insertHeader(bsoncxx::builder::basic::document& document, const CCSDS_Packet &packet);
+    void insertHeader(const CCSDS_Packet &packet);
 };
 
 #endif //FINAL_PROJECT_CSVHANDLER_H

@@ -13,9 +13,7 @@
 #include "logics/CCSDS_Packet.h"
 
 CSVHandler::CSVHandler() {
-    static mongocxx::instance instance{}; // Required once per application
-    client = mongocxx::client{mongocxx::uri{"mongodb://192.168.102.79:27017"}};
-    database = client["CCSDS_DB"];
+
 }
 
 void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
@@ -84,7 +82,7 @@ void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
     std::cout << "Packet inserted successfully." << std::endl;
 }
 
-void CSVHandler::insertHeader(bsoncxx::builder::basic::document &document, const CCSDS_Packet &packet) {
+void CSVHandler::insertHeader(const CCSDS_Packet &packet) {
     document.append(bsoncxx::builder::basic::kvp("main_frame_header", packet.main_frame_header));
     document.append(bsoncxx::builder::basic::kvp("packet_id", packet.packet_id));
     document.append(bsoncxx::builder::basic::kvp("packet_sequence_control", packet.packet_sequence_control));
