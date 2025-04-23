@@ -74,8 +74,9 @@ private:
     template <typename T>
     void serializeExtendedPayloadP28(const T payload, const CCSDS_Packet& packet, std::ofstream &file);
 
+    void insertHeader(const CCSDS_Packet &packet, std::ofstream &file);
     template <typename ArrayType>
-    static std::string writeArray(const ArrayType& arr);
+    std::string writeArray(const ArrayType* arr, size_t size);
 };
 
 #endif //FINAL_PROJECT_CSVHANDLER_H
