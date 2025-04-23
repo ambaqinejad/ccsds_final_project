@@ -367,7 +367,86 @@ void CSVHandler::serializeExtendedPayloadP8(const T payload, const CCSDS_Packet 
 }
 
 
+template<typename T>
+void CSVHandler::serializeExtendedPayloadP9(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP9"];
+    bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
+    // UC1_SunReceiveCnt
+    bsoncxx::builder::basic::array uc1_sun_receive;
+    for (int i = 0; i < 3; ++i) {
+        uc1_sun_receive.append(payload.UC1_SunReceiveCnt[i]);
+    }
+    doc.append(bsoncxx::builder::basic::kvp("UC1_SunReceiveCnt", uc1_sun_receive));
 
+    doc.append(bsoncxx::builder::basic::kvp("UC2_LastGetTime", payload.UC2_LastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("UC2_TransmitCnt", payload.UC2_TransmitCnt));
+    doc.append(bsoncxx::builder::basic::kvp("UC2_SFReceiveCnt", payload.UC2_SFReceiveCnt));
+    doc.append(bsoncxx::builder::basic::kvp("UC2_SwitchCmd", payload.UC2_SwitchCmd));
+    doc.append(bsoncxx::builder::basic::kvp("UC2_SwitchRealState", payload.UC2_SwitchRealState));
+    doc.append(bsoncxx::builder::basic::kvp("UC2_SwitchFlagState", payload.UC2_SwitchFlagState));
+
+    // UC2_SunReceiveCnt
+    bsoncxx::builder::basic::array uc2_sun_receive;
+    for (int i = 0; i < 3; ++i) {
+        uc2_sun_receive.append(payload.UC2_SunReceiveCnt[i]);
+    }
+    doc.append(bsoncxx::builder::basic::kvp("UC2_SunReceiveCnt", uc2_sun_receive));
+
+    doc.append(bsoncxx::builder::basic::kvp("HE_durationProcess", payload.HE_durationProcess));
+    doc.append(bsoncxx::builder::basic::kvp("HE_SFduration", payload.HE_SFduration));
+
+    // HE_OBCTaskRunning
+    bsoncxx::builder::basic::array obc_tasks;
+    for (int i = 0; i < 32; ++i) {
+        obc_tasks.append(payload.HE_OBCTaskRunning[i]);
+    }
+    doc.append(bsoncxx::builder::basic::kvp("HE_OBCTaskRunning", obc_tasks));
+
+    doc.append(bsoncxx::builder::basic::kvp("Heater33vTimer", payload.Heater33vTimer));
+    doc.append(bsoncxx::builder::basic::kvp("OAPPowerDisipation", payload.OAPPowerDisipation));
+    doc.append(bsoncxx::builder::basic::kvp("HE_SPIGetCounter", payload.HE_SPIGetCounter));
+
+    // HE_MRAMCnt
+    bsoncxx::builder::basic::array mram_cnt;
+    for (int i = 0; i < 3; ++i) {
+        mram_cnt.append(payload.HE_MRAMCnt[i]);
+    }
+    doc.append(bsoncxx::builder::basic::kvp("HE_MRAMCnt", mram_cnt));
+
+    doc.append(bsoncxx::builder::basic::kvp("HE_ObcCounter", static_cast<int32_t>(payload.HE_ObcCounter)));
+
+    // RTC times
+    bsoncxx::builder::basic::array rtc1, rtc2, rtc3;
+    for (int i = 0; i < 3; ++i) {
+        rtc1.append(payload.HE_RTCTime1[i]);
+        rtc2.append(payload.HE_RTCTime2[i]);
+        rtc3.append(payload.HE_RTCTime3[i]);
+    }
+    doc.append(bsoncxx::builder::basic::kvp("HE_RTCTime1", rtc1));
+    doc.append(bsoncxx::builder::basic::kvp("HE_RTCTime2", rtc2));
+    doc.append(bsoncxx::builder::basic::kvp("HE_RTCTime3", rtc3));
+
+    doc.append(bsoncxx::builder::basic::kvp("HE_JulianDate", payload.HE_JulianDate));
+
+    doc.append(bsoncxx::builder::basic::kvp("RW1TimeSetCommand", payload.RW1TimeSetCommand));
+    doc.append(bsoncxx::builder::basic::kvp("RW1LastGetTime", payload.RW1LastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("RW2TimeSetCommand", payload.RW2TimeSetCommand));
+    doc.append(bsoncxx::builder::basic::kvp("RW2LastGetTime", payload.RW2LastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("RW3TimeSetCommand", payload.RW3TimeSetCommand));
+    doc.append(bsoncxx::builder::basic::kvp("RW3LastGetTime", payload.RW3LastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("RW4TimeSetCommand", payload.RW4TimeSetCommand));
+
+    doc.append(bsoncxx::builder::basic::kvp("SunIRLastGetTime", payload.SunIRLastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("RWRLastGetTime", payload.RWRLastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("StarIRLastGetTime", payload.StarIRLastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("HescoLastGetTime", payload.HescoLastGetTime));
+    doc.append(bsoncxx::builder::basic::kvp("BatteryFreeRunning", payload.BatteryFreeRunning));
+
+    collection.insert_one(doc.view());
+
+}
 
 template<typename T>
 void CSVHandler::serializeExtendedPayloadP10(const T payload, const CCSDS_Packet &packet, std::ofstream &file) {
