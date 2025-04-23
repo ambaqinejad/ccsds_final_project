@@ -5,6 +5,8 @@ using namespace std;
 
 int main(int argc, char *argv[]) {
     cout << sizeof(ExtendedP5) << endl;
+    cout << 59%100 << endl;
+    cout << 59/100 << endl;
     int port = 5000;
 
     if (argc > 1) {

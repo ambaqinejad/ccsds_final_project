@@ -15,7 +15,7 @@ using namespace std;
 
 class ClientCommunicationHelper {
 public:
-    static void notifyClients(double progress, CCSDS_Packet &packet);
+    static void notifyClients(double progress, CCSDS_Packet packet);
     static unordered_set<WebSocketConnectionPtr> clients;
 };
 

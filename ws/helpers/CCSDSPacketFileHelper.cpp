@@ -58,14 +58,13 @@ void CCSDSPacketFileHelper::processFile(const string &filePath, const std::strin
 
 std::map<std::string, std::vector<CCSDS_Packet>> CCSDSPacketFileHelper::uuidToSavedPacketsMapper;
 void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, int count_of_valid_chunks, const std::string &fileUUID) {
-    MongoDBHandler dbHandler;
 
     int eachTimeNotifyClients = count_of_valid_chunks / 10;
     std::vector<CCSDS_Packet> packets {};
     for (size_t i = 0; i < chunks.size(); ++i) {
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
         packets.push_back(packet);
-        double progress = ((double)i / count_of_valid_chunks) * 100;
+        int progress = std::ceil(((double)i / count_of_valid_chunks) * 100);
         // notify clients each n times
         if (i % eachTimeNotifyClients == 0) {
             ClientCommunicationHelper::notifyClients(progress, packet);

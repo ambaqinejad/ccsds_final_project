@@ -7,7 +7,7 @@
 
 std::unordered_set<WebSocketConnectionPtr> ClientCommunicationHelper::clients;
 
-void ClientCommunicationHelper::notifyClients(double progress, CCSDS_Packet &packet) {
+void ClientCommunicationHelper::notifyClients(double progress, CCSDS_Packet packet) {
     Json::Value msg;
     msg["progress"] = progress;
 

@@ -1,8 +1,6 @@
 #include "FileController.h"
 #include <drogon/drogon.h>
-#include <fstream>
 #include <thread>
-#include <chrono>
 #include <iostream>
 
 #include "database/MongoDBHandler.h"
