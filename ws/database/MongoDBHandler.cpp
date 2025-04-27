@@ -110,7 +110,7 @@ void MongoDBHandler::serializeExtendedPayloadP1(const T payload, const CCSDS_Pac
     insertHeader(doc, packet);
     bsoncxx::builder::basic::array cam1_array;
     for (auto byte: payload.CameraPacket1) cam1_array.append(static_cast<int>(byte));
-    doc.append(bsoncxx::builder::basic::kvp("CameraPacket2", cam1_array));
+    doc.append(bsoncxx::builder::basic::kvp("CameraPacket1", cam1_array));
     collection.insert_one(doc.view());
 }
 
@@ -387,10 +387,49 @@ void MongoDBHandler::serializeExtendedPayloadP8(const T payload, const CCSDS_Pac
     doc.append(bsoncxx::builder::basic::kvp("CB2Temprature2", payload.CB2Temprature2));
     doc.append(bsoncxx::builder::basic::kvp("PRPTimeSampling", payload.PRPTimeSampling));
 
-    // Packed bitfield group (flattened here)
-//    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part1", payload.NumberOfResetPMUConnection));
-//    doc.append(bsoncxx::builder::basic::kvp("FaultFlags_Part2", payload.MMCBlkCnt));
-//    doc.append(bsoncxx::builder::basic::kvp("MMC_WriteErrors", payload.MMC_WriteErrors));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfResetPMUConnection", static_cast<int32_t>(payload.NumberOfResetPMUConnection)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfResetSFConnection", static_cast<int32_t>(payload.NumberOfResetSFConnection)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfResetCB1Connection", static_cast<int32_t>(payload.NumberOfResetCB1Connection)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfResetIRPDUConnection", static_cast<int32_t>(payload.NumberOfResetIRPDUConnection)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfContiniousReset", static_cast<int32_t>(payload.NumberOfContiniousReset)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfOBC1_CAN1Reset", static_cast<int32_t>(payload.NumberOfOBC1_CAN1Reset)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfOBC2_CAN1Reset", static_cast<int32_t>(payload.NumberOfOBC2_CAN1Reset)));
+    doc.append(bsoncxx::builder::basic::kvp("NumberOfUV_CAN1Connection", static_cast<int32_t>(payload.NumberOfUV_CAN1Connection)));
+    doc.append(bsoncxx::builder::basic::kvp("Sun1FaultCnt", static_cast<int32_t>(payload.Sun1FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Sun2FaultCnt", static_cast<int32_t>(payload.Sun2FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Sun3FaultCnt", static_cast<int32_t>(payload.Sun3FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Sun4FaultCnt", static_cast<int32_t>(payload.Sun4FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Sun5FaultCnt", static_cast<int32_t>(payload.Sun5FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Sun6FaultCnt", static_cast<int32_t>(payload.Sun6FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Gyro1FaultCnt", static_cast<int32_t>(payload.Gyro1FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("Gyro2FaultCnt", static_cast<int32_t>(payload.Gyro2FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("RW1FaultCnt", static_cast<int32_t>(payload.RW1FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("RW2FaultCnt", static_cast<int32_t>(payload.RW2FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("RW3FaultCnt", static_cast<int32_t>(payload.RW3FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("RW4FaultCnt", static_cast<int32_t>(payload.RW4FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("RW5FaultCnt", static_cast<int32_t>(payload.RW5FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("StarTrackerFaultCnt", static_cast<int32_t>(payload.StarTrackerFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("IRStarTrackerFaultCnt", static_cast<int32_t>(payload.IRStarTrackerFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("CameraFaultCnt", static_cast<int32_t>(payload.CameraFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("SIGINTFaultCnt", static_cast<int32_t>(payload.SIGINTFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("MT_IsisFaultCnt", static_cast<int32_t>(payload.MT_IsisFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("MT_HescoFaultCnt", static_cast<int32_t>(payload.MT_HescoFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("MM_HMR1FaultCnt", static_cast<int32_t>(payload.MM_HMR1FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("MM_HMR2FaultCnt", static_cast<int32_t>(payload.MM_HMR2FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("SBandRxFaultCnt", static_cast<int32_t>(payload.SBandRxFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("SBandTxFaultCnt", static_cast<int32_t>(payload.SBandTxFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("XBandFaultCnt", static_cast<int32_t>(payload.XBandFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("GPS1FaultCnt", static_cast<int32_t>(payload.GPS1FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("GPS2FaultCnt", static_cast<int32_t>(payload.GPS2FaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("PRPFaultCnt", static_cast<int32_t>(payload.PRPFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("TempSensorFaultCnt", static_cast<int32_t>(payload.TempSensorFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("BatteryHeaterFaultCnt", static_cast<int32_t>(payload.BatteryHeaterFaultCnt)));
+    doc.append(bsoncxx::builder::basic::kvp("RWDevID5", static_cast<int32_t>(payload.RWDevID5)));
+    doc.append(bsoncxx::builder::basic::kvp("EnableBatteryHeaterFDIR", static_cast<int32_t>(payload.EnableBatteryHeaterFDIR)));
+    doc.append(bsoncxx::builder::basic::kvp("Res3", static_cast<int32_t>(payload.Res3)));
+    doc.append(bsoncxx::builder::basic::kvp("MMCBlkCnt", payload.MMCBlkCnt));
+    doc.append(bsoncxx::builder::basic::kvp("MMC_WriteErrors", static_cast<int32_t>(payload.MMC_WriteErrors)));
+
     doc.append(bsoncxx::builder::basic::kvp("processSPIDataPacketErrorCnt", payload.processSPIDataPacketErrorCnt));
 
     bsoncxx::builder::basic::array rw_dev_id_array;
@@ -867,8 +906,11 @@ void MongoDBHandler::serializeExtendedPayloadP15(const T payload, const CCSDS_Pa
     doc.append(bsoncxx::builder::basic::kvp("IR_Star_attitudeQ2", payload.IR_Star_attitudeQ2));
     doc.append(bsoncxx::builder::basic::kvp("IR_Star_attitudeQ3", payload.IR_Star_attitudeQ3));
     doc.append(bsoncxx::builder::basic::kvp("IR_Star_attitudeQ4", payload.IR_Star_attitudeQ4));
-    doc.append(bsoncxx::builder::basic::kvp("IR_Star_internal_time",
-                                            *reinterpret_cast<const double *>(payload.bytes)));  // Converting byte array to double
+    // Reserved data
+    bsoncxx::builder::basic::array bytes;
+    for (int i = 0; i < 8; ++i) bytes.append(payload.bytes[i]);
+    doc.append(bsoncxx::builder::basic::kvp("IR_Star_internal_time", bytes));
+
     doc.append(bsoncxx::builder::basic::kvp("IR_StarTemp", payload.IR_StarTemp));
     doc.append(bsoncxx::builder::basic::kvp("IR_StarImage_expo_value", payload.IR_StarImage_expo_value));
     doc.append(bsoncxx::builder::basic::kvp("IR_StarImage_threshold", payload.IR_StarImage_threshold));
