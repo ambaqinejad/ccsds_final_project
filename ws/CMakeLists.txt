@@ -37,6 +37,8 @@ add_executable(${PROJECT_NAME} main.cc
         helpers/UIDGeneratorHelper.h
         helpers/ControllerErrorHelper.cpp
         helpers/ControllerErrorHelper.h
+        helpers/StructureHelper.cpp
+        helpers/StructureHelper.h
 )
 
 # ##############################################################################
@@ -49,6 +51,7 @@ add_executable(${PROJECT_NAME} main.cc
 find_package(Drogon CONFIG REQUIRED)
 find_package(mongocxx REQUIRED)
 find_package(bsoncxx REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE Drogon::Drogon)
 target_link_libraries(final-project
         PRIVATE
@@ -104,5 +107,9 @@ target_sources(${PROJECT_NAME}
 # set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 # ##############################################################################
+add_custom_command(
+        TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/uploads/structs.h ${CMAKE_SOURCE_DIR}/structure/
+)
 
 add_subdirectory(test)

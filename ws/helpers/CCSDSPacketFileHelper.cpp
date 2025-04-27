@@ -6,15 +6,10 @@
 #include <iostream>
 #include <fstream>
 
-#include "database/MongoDBHandler.h"
 #include "helpers/ClientCommunicationHelper.h"
 
-#include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
 
-
-#include <mongocxx/uri.hpp>
-#include <bsoncxx/json.hpp>
 
 using namespace std;
 
