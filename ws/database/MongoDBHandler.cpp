@@ -20,6 +20,8 @@ MongoDBHandler::MongoDBHandler() {
     database = client["CCSDS_DB"];
 }
 
+
+
 void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     // Serialize the extended_payload
     std::visit([&](auto &&arg) {
@@ -101,6 +103,34 @@ void MongoDBHandler::insertHeader(bsoncxx::builder::basic::document &document, c
     document.append(bsoncxx::builder::basic::kvp("flash_address", static_cast<int>(packet.flash_address)));
 }
 
+void MongoDBHandler::insertStructure(nlohmann::ordered_json json) {
+    mongocxx::collection collection = database["CCSDS_Structure"];
+    collection.drop(); // Clear previous data
+
+    for (auto& item : json.items()) {
+        bsoncxx::document::value doc = bsoncxx::from_json(item.value().dump());
+        collection.insert_one(doc.view());
+    }
+}
+nlohmann::ordered_json MongoDBHandler::ccsds_structure;
+bool MongoDBHandler::loadStructure() {
+    mongocxx::collection collection;
+    collection = database["CCSDS_Structure"];
+    auto cursor = collection.find({});
+    MongoDBHandler::ccsds_structure = nlohmann::ordered_json::array();
+    for (auto &&doc: cursor) {
+        std::string json_str = bsoncxx::to_json(doc);
+        nlohmann::ordered_json j = nlohmann::ordered_json::parse(json_str);
+        MongoDBHandler::ccsds_structure.push_back(j);
+    }
+    if (!MongoDBHandler::ccsds_structure.empty()) {
+        std::cout << "Structure loaded successfully from DB to RAM!" << std::endl;
+        return true;
+    }
+
+    std::cout << "Structure could not load from DB to RAM!" << std::endl;
+    return false;
+}
 
 template<typename T>
 void MongoDBHandler::serializeExtendedPayloadP1(const T payload, const CCSDS_Packet &packet) {

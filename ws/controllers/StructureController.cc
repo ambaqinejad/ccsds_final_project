@@ -22,7 +22,7 @@ void StructureController::uploadFile(const drogon::HttpRequestPtr &req,
     auto resp = HttpResponse::newHttpJsonResponse(msg);
     LOG_INFO << "The uploaded file has been saved to the ./uploads "
                 "directory";
-    StructureHelper::generateStructsFromJson(filePath, "./structs.h");
+    StructureHelper::generateStructsFromJsonAndStoreInDB(filePath);
     callback(resp);
 
 }

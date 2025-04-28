@@ -10,7 +10,7 @@
 #include <mongocxx/client.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
-
+#include <nlohmann/json.hpp>
 #include "logics/CCSDS_Packet.h"
 
 
@@ -19,6 +19,9 @@ public:
     MongoDBHandler();
 
     void insertPacket(const CCSDS_Packet &packet);
+    void insertStructure(nlohmann::ordered_json json);
+    bool loadStructure();
+    static nlohmann::ordered_json ccsds_structure;
 
 private:
     mongocxx::client client;
