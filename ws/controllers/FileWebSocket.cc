@@ -3,9 +3,7 @@
 #include "helpers/ClientCommunicationHelper.h"
 
 void FileWebSocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, std::string &&message, const WebSocketMessageType &type)
-{
-    // write your application logic here
-}
+{}
 
 void FileWebSocket::handleNewConnection(const HttpRequestPtr &req, const WebSocketConnectionPtr& wsConnPtr)
 {
@@ -14,7 +12,4 @@ void FileWebSocket::handleNewConnection(const HttpRequestPtr &req, const WebSock
 }
 
 void FileWebSocket::handleConnectionClosed(const WebSocketConnectionPtr& wsConnPtr)
-{
-    // write your application logic here
-//    FileController::clients.erase(wsConnPtr);
-}
+{}

@@ -9,6 +9,7 @@
 #include <mongocxx/client.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
+#include <json/json.h>
 
 #include "logics/CCSDS_Packet.h"
 
@@ -24,66 +25,78 @@ MongoDBHandler::MongoDBHandler() {
 
 void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     // Serialize the extended_payload
-    std::visit([&](auto &&arg) {
-        using T = std::decay_t<decltype(arg)>;
-        if constexpr (std::is_same_v<T, ExtendedP1>) {
-            serializeExtendedPayloadP1(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP2>) {
-            serializeExtendedPayloadP2(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP3>) {
-            serializeExtendedPayloadP3(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP4>) {
-            serializeExtendedPayloadP4(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP5>) {
-            serializeExtendedPayloadP5(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP6>) {
-            serializeExtendedPayloadP6(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP7>) {
-            serializeExtendedPayloadP7(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP8>) {
-            serializeExtendedPayloadP8(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP9>) {
-            serializeExtendedPayloadP9(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP10>) {
-            serializeExtendedPayloadP10(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP11>) {
-            serializeExtendedPayloadP11(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP12>) {
-            serializeExtendedPayloadP12(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP13>) {
-            serializeExtendedPayloadP13(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP14>) {
-            serializeExtendedPayloadP14(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP15>) {
-            serializeExtendedPayloadP15(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP16>) {
-            serializeExtendedPayloadP16(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP17>) {
-            serializeExtendedPayloadP17(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP18>) {
-            serializeExtendedPayloadP18(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP19>) {
-            serializeExtendedPayloadP19(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP20>) {
-            serializeExtendedPayloadP20(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP21>) {
-            serializeExtendedPayloadP21(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP22>) {
-            serializeExtendedPayloadP22(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP23>) {
-            serializeExtendedPayloadP23(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP24>) {
-            serializeExtendedPayloadP24(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP25>) {
-            serializeExtendedPayloadP25(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP26>) {
-            serializeExtendedPayloadP26(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP27>) {
-            serializeExtendedPayloadP27(arg, packet);
-        } else if constexpr (std::is_same_v<T, ExtendedP28>) {
-            serializeExtendedPayloadP28(arg, packet);
-        }
-    }, packet.extended_payload);
+    mongocxx::collection collection;
+    collection = database["ExtendedPayloadP" + packet.sid];
+    bsoncxx::builder::basic::document doc{};
+    insertHeader(doc, packet);
+
+    Json::StreamWriterBuilder writer;
+    std::string jsonStr = Json::writeString(writer, packet.parsedData);
+
+    // Step 3: Parse JSON string into BSON
+    bsoncxx::document::value subDocument = bsoncxx::from_json(jsonStr);
+    doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
+    collection.insert_one(doc.view());
+//    std::visit([&](auto &&arg) {
+//        using T = std::decay_t<decltype(arg)>;
+//        if constexpr (std::is_same_v<T, ExtendedP1>) {
+//            serializeExtendedPayloadP1(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP2>) {
+//            serializeExtendedPayloadP2(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP3>) {
+//            serializeExtendedPayloadP3(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP4>) {
+//            serializeExtendedPayloadP4(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP5>) {
+//            serializeExtendedPayloadP5(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP6>) {
+//            serializeExtendedPayloadP6(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP7>) {
+//            serializeExtendedPayloadP7(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP8>) {
+//            serializeExtendedPayloadP8(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP9>) {
+//            serializeExtendedPayloadP9(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP10>) {
+//            serializeExtendedPayloadP10(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP11>) {
+//            serializeExtendedPayloadP11(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP12>) {
+//            serializeExtendedPayloadP12(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP13>) {
+//            serializeExtendedPayloadP13(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP14>) {
+//            serializeExtendedPayloadP14(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP15>) {
+//            serializeExtendedPayloadP15(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP16>) {
+//            serializeExtendedPayloadP16(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP17>) {
+//            serializeExtendedPayloadP17(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP18>) {
+//            serializeExtendedPayloadP18(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP19>) {
+//            serializeExtendedPayloadP19(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP20>) {
+//            serializeExtendedPayloadP20(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP21>) {
+//            serializeExtendedPayloadP21(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP22>) {
+//            serializeExtendedPayloadP22(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP23>) {
+//            serializeExtendedPayloadP23(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP24>) {
+//            serializeExtendedPayloadP24(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP25>) {
+//            serializeExtendedPayloadP25(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP26>) {
+//            serializeExtendedPayloadP26(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP27>) {
+//            serializeExtendedPayloadP27(arg, packet);
+//        } else if constexpr (std::is_same_v<T, ExtendedP28>) {
+//            serializeExtendedPayloadP28(arg, packet);
+//        }
+//    }, packet.extended_payload);
 
     std::cout << "Packet inserted successfully." << std::endl;
 }

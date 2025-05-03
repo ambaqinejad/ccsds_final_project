@@ -8,10 +8,6 @@ class PacketController : public drogon::HttpController<PacketController>
 {
   public:
     METHOD_LIST_BEGIN
-    // use METHOD_ADD to add your custom processing function here;
-    // METHOD_ADD(PacketController::get, "/{2}/{1}", Get); // path is /PacketController/{arg2}/{arg1}
-    // METHOD_ADD(PacketController::your_method_name, "/{1}/{2}/list", Get); // path is /PacketController/{arg1}/{arg2}/list
-    // ADD_METHOD_TO(PacketController::your_method_name, "/absolute/path/{1}/{2}/list", Get); // path is /absolute/path/{arg1}/{arg2}/list
     ADD_METHOD_TO(PacketController::getSIDPacketsByPagination, "/getSIDPacketsByPagination", Post);
     ADD_METHOD_TO(PacketController::persistAllPacketsInMongoDB, "/persistAllPacketsInMongoDB", Post);
     ADD_METHOD_TO(PacketController::persistAllPacketsInMongoDBBasedOnSID, "/persistAllPacketsInMongoDBBasedOnSID", Post);
