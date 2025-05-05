@@ -1,3 +1,4 @@
+#include <fstream>
 #include "PacketController.h"
 #include "helpers/ControllerErrorHelper.h"
 #include "logics/CCSDS_Packet.h"
@@ -184,3 +185,33 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
     callback(resp);
 
 }
+
+void
+PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) const {
+    std::string sid = (*req->getJsonObject())["sid"].asString();
+
+    std::string fullPath = "uploads/ExtendedPayloadP" + sid + ".csv";
+    std::string filename = "ExtendedPayloadP" + sid + ".csv";
+    std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
+    if (!file.is_open()) {
+        auto resp = HttpResponse::newHttpResponse();
+        resp->setStatusCode(k404NotFound);
+        resp->setBody("File not found");
+        callback(resp);
+        return;
+    }
+
+    auto fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    std::string fileData(fileSize, '\0');
+    file.read(&fileData[0], fileSize);
+    file.close();
+
+    auto resp = HttpResponse::newHttpResponse();
+    resp->setBody(std::move(fileData));
+    resp->addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+    resp->setContentTypeCode(CT_APPLICATION_OCTET_STREAM);
+    callback(resp);
+}
+
+
