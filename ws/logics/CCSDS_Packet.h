@@ -7,6 +7,7 @@
 #include <variant>
 #include <memory>
 #include <json/value.h>
+#include <unordered_map>
 
 #include "SIDs.h"
 
@@ -20,6 +21,9 @@ using ExtendedPayload = std::variant<
     ExtendedP20, ExtendedP21, ExtendedP22, ExtendedP23, ExtendedP24,
     ExtendedP25, ExtendedP26, ExtendedP27, ExtendedP28>;
 
+using FieldValue = std::variant<uint8_t, uint16_t, uint32_t, uint64_t, int8_t, double_t, float_t>;
+
+
 class CCSDS_Packet {
 public:
 
@@ -29,14 +33,10 @@ public:
     // Function to deserialize the 128-byte chunk into a Packet structure
     CCSDS_Packet deserialize_packet(vector<uint8_t> &data);
 
-    // Parse raw binary data
-    void parsePacket(const vector<uint8_t>& rawData);
-
-    // Display Parsed Packet Data
-    void printPacket() const;
-
     [[nodiscard]] Json::Value toJson() const;
 
+    template<typename T>
+    void mapPayloadToMeaningfulData(size_t offset, const std::string& fieldName);
 
     // private:
     uint16_t main_frame_header;
@@ -52,6 +52,7 @@ public:
     uint32_t flash_address;
     vector<uint8_t> payload;
     ExtendedPayload extended_payload;  // Store the extended data
+    Json::Value parsedData;
 };
 
 #endif // CCSDS_PARSER_CCSDS_PACKET_H

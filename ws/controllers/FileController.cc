@@ -19,10 +19,11 @@ void FileController::uploadFile(const HttpRequestPtr &req, std::function<void(co
     }
 
     HttpFile file = fileUpload.getFiles()[0];
-    std::string fileUUID = UIDGeneratorHelper::generateUID() + "." + std::string(file.getFileExtension());
+    std::string fileUUID = UIDGeneratorHelper::generateUID();
+    std::string fileName = fileUUID + "." + std::string(file.getFileExtension());
     auto md5 = file.getMd5();
     Json::Value msg;
-    file.setFileName(fileUUID);
+    file.setFileName(fileName);
     file.save();
     string filePath = "uploads/" + file.getFileName();
     msg["fileUUID"] = fileUUID;

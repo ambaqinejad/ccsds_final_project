@@ -107,9 +107,4 @@ target_sources(${PROJECT_NAME}
 # set_property(TARGET ${PROJECT_NAME} PROPERTY ENABLE_EXPORTS ON)
 
 # ##############################################################################
-add_custom_command(
-        TARGET ${PROJECT_NAME} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/uploads/structs.h ${CMAKE_SOURCE_DIR}/structure/
-)
-
 add_subdirectory(test)
