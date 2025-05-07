@@ -6,6 +6,7 @@ void CCSDSController::startWebSocket(const HttpRequestPtr &req, std::function<vo
     std::string command = "/home/ccsds_source/ccsds_final_project/api/build/final-project " + std::to_string(port) + " &";  // Run in background
     int result = std::system(command.c_str());
     LOG_INFO << "Starting WebSocket server result " << result << "\n";
+    std::cout << "Starting WebSocket server result " << result << "\n";
 
     if (result == 0)
     {
