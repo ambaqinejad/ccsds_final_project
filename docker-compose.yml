@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ccsds_api
+    working_dir: /home/ccsds_source/ccsds_final_project/api/build
+    command: ["/home/ccsds_source/ccsds_final_project/api/build/api"]
+    restart: always
+    ports:
+      - "5000:5000"  # Adjust if needed
+      - "6000:6000"
+    networks:
+      - ccsds_network
+    depends_on:
+      - ws
+
+  ws:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ccsds_ws
+    working_dir: /home/ccsds_source/ccsds_final_project/ws/build
+    # entrypoint: /bin/true
+    # restart: always
+    networks:
+      - ccsds_network
+
+networks:
+  ccsds_network:
+    driver: bridge
