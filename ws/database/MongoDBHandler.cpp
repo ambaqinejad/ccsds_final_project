@@ -26,7 +26,8 @@ MongoDBHandler::MongoDBHandler() {
 void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     // Serialize the extended_payload
     mongocxx::collection collection;
-    collection = database["ExtendedPayloadP" + packet.sid];
+    std::string collection_name = "ExtendedPayloadP" + std::to_string(packet.sid);
+    collection = database[collection_name];
     bsoncxx::builder::basic::document doc{};
     insertHeader(doc, packet);
 
