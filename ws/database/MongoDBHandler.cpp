@@ -10,14 +10,16 @@
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <json/json.h>
-
+#include <cstdlib>
 #include "logics/CCSDS_Packet.h"
 
 MongoDBHandler::MongoDBHandler() {
-    // mongocxx::instance instance;
-
     static mongocxx::instance instance{}; // Required once per application
-    client = mongocxx::client{mongocxx::uri{"mongodb://192.168.102.79:27017"}};
+    const char* uri_env = std::getenv("MONGODB_URI");
+    std::string uri = uri_env ? uri_env : "mongodb://localhost:27017";  // fallback if env not set
+
+    std::cout << uri << std::endl;
+    client = mongocxx::client{mongocxx::uri{uri}};
     database = client["CCSDS_DB"];
 }
 
