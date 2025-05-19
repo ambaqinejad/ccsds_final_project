@@ -16,6 +16,14 @@ services:
       - ccsds_network
     depends_on:
       - ws
+    environment:
+      - MONGODB_URI=mongodb://192.168.102.79:27017
+    deploy:
+      resources:
+        limits:
+          cpus: '6.0'
+        reservations:
+          cpus: '2.0'
 
   ws:
     build:
@@ -27,6 +35,12 @@ services:
     # restart: always
     networks:
       - ccsds_network
+    deploy:
+      resources:
+        limits:
+          cpus: '6.0'
+    cpus: '6.0'
+    cpuset: "0-6"
 
 networks:
   ccsds_network:
