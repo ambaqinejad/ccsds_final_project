@@ -16,7 +16,7 @@
 MongoDBHandler::MongoDBHandler() {
     static mongocxx::instance instance{}; // Required once per application
     const char* uri_env = std::getenv("MONGODB_URI");
-    std::string uri = uri_env ? uri_env : "mongodb://localhost:27017";  // fallback if env not set
+    std::string uri = uri_env ? uri_env : "mongodb://192.168.102.79:27017";  // fallback if env not set
 
     std::cout << uri << std::endl;
     client = mongocxx::client{mongocxx::uri{uri}};
