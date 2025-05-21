@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
     bool isLoaded = dbHandler.loadStructure();
     if (!isLoaded) {
         const char* structure_file_path_env = std::getenv("DEFAULT_STRUCTURE_FILE_PATH");
-        std::string structure_file_path = structure_file_path_env ? structure_file_path_env : "uploads/default_structure2.json";
+        std::string structure_file_path = structure_file_path_env ? structure_file_path_env : "/home/ccsds_source/ccsds_final_project/ws/build/uploads";
         cout << structure_file_path_env << endl;
         StructureHelper::generateStructsFromJsonAndStoreInDB(structure_file_path);
         std::cout << "Default structure will be loaded." << std::endl;
