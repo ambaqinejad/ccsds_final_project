@@ -61,7 +61,7 @@ RUN curl -OL https://github.com/mongodb/mongo-cxx-driver/releases/download/r4.1.
 RUN cp -r /usr/local/include/mongocxx/v_noabi/mongocxx /usr/local/include/
 RUN cp -r /usr/local/include/bsoncxx/v_noabi/bsoncxx /usr/local/include
 
-COPY ccsds_final_project /home/ccsds_source/ccsds_final_project
+COPY . /home/ccsds_source/ccsds_final_project
 
 RUN cd ccsds_final_project && \
     cd api && \
@@ -74,6 +74,7 @@ RUN cd ccsds_final_project && \
     cd ws && \
     mkdir -p build && \
     cd build && \
+    mkdir -p uploads && \
     cmake .. && \
     make -j$(nproc)
 
