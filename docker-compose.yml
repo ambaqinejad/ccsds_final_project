@@ -18,6 +18,7 @@ services:
       - ws
     environment:
       - MONGODB_URI=mongodb://192.168.102.79:27017
+      - DEFAULT_STRUCTURE_FILE_PATH=uploads/default_structure.json
     deploy:
       resources:
         limits:

@@ -77,4 +77,7 @@ RUN cd ccsds_final_project && \
     cmake .. && \
     make -j$(nproc)
 
+COPY default_structure.json /home/ccsds_source/ccsds_final_project/ws/build/uploads
+
+
 CMD ["/home/ccsds_source/ccsds_final_project/api/build/api"]
