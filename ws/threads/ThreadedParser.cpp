@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "../logics/CCSDS_Packet.h"
+#include <chrono>
+
+using namespace std::chrono;
 
 ThreadedParser::ThreadedParser() : _stopParser(false) {
 }
@@ -61,7 +64,11 @@ std::vector<uint8_t> ThreadedParser::parseData(std::vector<uint8_t> &data) {
         cout << packets.size() << endl;
         if (i != data.size() - 1 && data[i] == 'H' && data[i + 1] == 'H' && i + 128 <= data.size()) {
             std::vector<uint8_t> chunk(data.begin() + i, data.begin() + i + 128);
+            auto start = high_resolution_clock::now();
             CCSDS_Packet packet = packet.deserialize_packet(chunk);
+            auto end = high_resolution_clock::now();
+            auto duration = duration_cast<milliseconds>(end - start);
+            cout << "deserialize_packet took " << duration.count() << " ms" << endl;
             printPacket(packet);
             packets.push_back(packet);
 

@@ -10,6 +10,10 @@
 
 #include <mongocxx/instance.hpp>
 
+#include <chrono>
+
+using namespace std::chrono;
+
 
 using namespace std;
 
@@ -57,7 +61,15 @@ void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, 
     int eachTimeNotifyClients = count_of_valid_chunks / 10;
     std::vector<CCSDS_Packet> packets {};
     for (size_t i = 0; i < chunks.size(); ++i) {
+        auto start = high_resolution_clock::now();
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
+        auto end = high_resolution_clock::now();
+        auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
+//        auto duration_ns = duration_cast<nanoseconds>(end - start);   // nanoseconds
+
+        cout << "Time (microseconds): " << duration_us.count() << " µs" << endl;
+//        cout << "Time (nanoseconds): " << duration_ns.count() << " ns" << endl;
+
         packets.push_back(packet);
         int progress = std::ceil(((double)i / count_of_valid_chunks) * 100);
         // notify clients each n times
