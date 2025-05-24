@@ -13,6 +13,7 @@ using namespace std;
 
 class FileController : public drogon::HttpController<FileController>
 {
+  // this class is for working with file that is uploaded to the server for processing
   public:
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(FileController::uploadFile, "/upload", Post);

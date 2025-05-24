@@ -13,14 +13,6 @@
 
 using namespace std;
 
-using ExtendedPayload = std::variant<
-    std::monostate, ExtendedP1, ExtendedP2, ExtendedP3, ExtendedP4,
-    ExtendedP5, ExtendedP6, ExtendedP7, ExtendedP8, ExtendedP9,
-    ExtendedP10, ExtendedP11, ExtendedP12, ExtendedP13, ExtendedP14,
-    ExtendedP15, ExtendedP16, ExtendedP17, ExtendedP18, ExtendedP19,
-    ExtendedP20, ExtendedP21, ExtendedP22, ExtendedP23, ExtendedP24,
-    ExtendedP25, ExtendedP26, ExtendedP27, ExtendedP28>;
-
 using FieldValue = std::variant<uint8_t, uint16_t, uint32_t, uint64_t, int8_t, double_t, float_t>;
 
 
@@ -51,7 +43,6 @@ public:
     uint64_t crc_fail_upload_map;
     uint32_t flash_address;
     vector<uint8_t> payload;
-    ExtendedPayload extended_payload;  // Store the extended data
     Json::Value parsedData;
 };
 

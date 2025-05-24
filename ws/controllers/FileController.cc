@@ -7,6 +7,8 @@
 #include "helpers/CCSDSPacketFileHelper.h"
 #include "helpers/UIDGeneratorHelper.h"
 
+// this class is for working with file that is uploaded to the server for processing
+
 void FileController::uploadFile(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback) const {
     MultiPartParser fileUpload;
     if (fileUpload.parse(req) != 0 || fileUpload.getFiles().size() != 1)

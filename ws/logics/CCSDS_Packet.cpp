@@ -102,7 +102,6 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
     std::advance(it, packet.sid - 1);
     for (auto topple = it->begin(); topple != it->end(); ++topple) {
         std::string fieldName = topple.key();
-//        cout << fieldName << endl;
         if (fieldName == "_id") {
             continue;
         }
@@ -165,11 +164,6 @@ Json::Value CCSDS_Packet::toJson() const {
 //        payloadArray.append(byte); // or format as hex
 //    }
     msg["payload"] = parsedDataObj;
-
-    // Optional: Handle extended_payload if you want to serialize it
-    if (!std::holds_alternative<std::monostate>(extended_payload)) {
-        msg["extended_payload"] = "Parsed data"; // placeholder - depends on your types
-    }
 
     return msg;
 }

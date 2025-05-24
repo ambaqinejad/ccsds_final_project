@@ -63,9 +63,16 @@ void MongoDBHandler::insertStructure(nlohmann::ordered_json json) {
     mongocxx::collection collection = database["CCSDS_Structure"];
     collection.drop(); // Clear previous data
 
+    int i = 1;
     for (auto& item : json.items()) {
-        bsoncxx::document::value doc = bsoncxx::from_json(item.value().dump());
+        nlohmann::ordered_json obj = item.value();
+
+        // Set the _id field to the value of sid
+        obj["_id"] = i;
+
+        bsoncxx::document::value doc = bsoncxx::from_json(obj.dump());
         collection.insert_one(doc.view());
+        i++;
     }
 }
 nlohmann::ordered_json MongoDBHandler::ccsds_structure;
