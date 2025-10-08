@@ -21,11 +21,11 @@ public:
     void insertPacket(const CCSDS_Packet &packet);
     void insertStructure(nlohmann::ordered_json json);
     bool loadStructure();
-    static nlohmann::ordered_json ccsds_structure;
+    static nlohmann::ordered_json ccsds_structure_;
 
 private:
-    mongocxx::client client;
-    mongocxx::database database;
+    mongocxx::client client_;
+    mongocxx::database database_;
 
     void insertHeader(bsoncxx::builder::basic::document& document, const CCSDS_Packet &packet);
 };

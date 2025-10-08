@@ -10,6 +10,6 @@
 
 class StructureHelper {
 public:
-    static void generateStructsFromJsonAndStoreInDB(const std::string &jsonFilePath);
+    static std::string generateStructsFromJsonAndStoreInDB(const std::string &jsonFilePath);
 };
 #endif //FINAL_PROJECT_STRUCTUREHELPER_H

@@ -7,9 +7,7 @@
 #include <fstream>
 
 #include "helpers/ClientCommunicationHelper.h"
-
-#include <mongocxx/instance.hpp>
-
+#include <drogon/drogon.h>
 #include <chrono>
 
 using namespace std::chrono;
@@ -20,7 +18,7 @@ using namespace std;
 void CCSDSPacketFileHelper::processFile(const string &filePath, const std::string &fileUUID) {
     ifstream file(filePath, ios::binary);
     if (!file) {
-        std::cerr << "Error opening file!" << std::endl;
+        LOG_INFO << "Error opening file!\n";
         return;
     }
     file.seekg(0, ios::end);
@@ -30,7 +28,7 @@ void CCSDSPacketFileHelper::processFile(const string &filePath, const std::strin
     // Allocate buffer and read data
     std::vector<unsigned char> buffer(fileSize);
     if (!file.read(reinterpret_cast<char*>(buffer.data()), fileSize)) {
-        std::cerr << "Error reading file!" << std::endl;
+        LOG_INFO << "Error reading file!\n";
         return;
     }
 
@@ -52,7 +50,6 @@ void CCSDSPacketFileHelper::processFile(const string &filePath, const std::strin
         }
     }
     parseData(chunks, count_of_valid_chunks, fileUUID);
-
 }
 
 std::map<std::string, std::vector<CCSDS_Packet>> CCSDSPacketFileHelper::uuidToSavedPacketsMapper;
@@ -65,11 +62,7 @@ void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, 
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
         auto end = high_resolution_clock::now();
         auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
-//        auto duration_ns = duration_cast<nanoseconds>(end - start);   // nanoseconds
-
         cout << "Time (microseconds): " << duration_us.count() << " µs" << endl;
-//        cout << "Time (nanoseconds): " << duration_ns.count() << " ns" << endl;
-
         packets.push_back(packet);
         int progress = std::ceil(((double)i / count_of_valid_chunks) * 100);
         // notify clients each n times

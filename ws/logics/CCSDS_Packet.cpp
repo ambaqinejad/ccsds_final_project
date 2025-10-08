@@ -98,11 +98,11 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
 
     // Remaining bytes are payload
     packet.payload.assign(chunk.begin() + offset, chunk.end());
-    auto it = MongoDBHandler::ccsds_structure.begin();
+    auto it = MongoDBHandler::ccsds_structure_.begin();
     std::advance(it, packet.sid - 1);
     for (auto topple = it->begin(); topple != it->end(); ++topple) {
         std::string fieldName = topple.key();
-        if (fieldName == "_id") {
+        if (fieldName == "_id" || fieldName == "sub_system" || fieldName == "SID") {
             continue;
         }
         std::string fieldType = topple.value();

@@ -19,11 +19,11 @@ void StructureController::uploadFile(const drogon::HttpRequestPtr &req,
     file.save();
     std::string filePath = "uploads/" + file.getFileName();
     msg["msg"] = "The uploaded file has been saved in path " + filePath;
-    auto resp = HttpResponse::newHttpJsonResponse(msg);
     LOG_INFO << "The uploaded file has been saved to the ./uploads "
                 "directory";
-    StructureHelper::generateStructsFromJsonAndStoreInDB(filePath);
+    std::string resultMessage = StructureHelper::generateStructsFromJsonAndStoreInDB(filePath);
+    msg["resultMessage"] = resultMessage;
+    auto resp = HttpResponse::newHttpJsonResponse(msg);
     callback(resp);
-
 }
 // Add definition of your processing function here

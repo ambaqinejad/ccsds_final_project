@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iomanip>
 #include "logics/CCSDS_Packet.h"
+#include <drogon/drogon.h>
 
 CSVHandler::CSVHandler() {
 
@@ -63,7 +64,7 @@ void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
     csvFile << '\n';
 
     csvFile.close();
-    std::cout << "Packet written to CSV with flattened fields." << std::endl;
+    LOG_INFO << "Packet written to CSV with flattened fields.\n";
 
-    std::cout << "Packet inserted successfully." << std::endl;
+    LOG_INFO << "Packet inserted successfully.\n";
 }

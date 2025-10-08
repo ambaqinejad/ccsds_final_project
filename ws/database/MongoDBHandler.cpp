@@ -12,15 +12,16 @@
 #include <json/json.h>
 #include <cstdlib>
 #include "logics/CCSDS_Packet.h"
+#include <drogon/HttpController.h>
 
 MongoDBHandler::MongoDBHandler() {
     static mongocxx::instance instance{}; // Required once per application
     const char* uri_env = std::getenv("MONGODB_URI");
-    std::string uri = uri_env ? uri_env : "mongodb://192.168.102.79:27017";  // fallback if env not set
+    std::string uri = uri_env ? uri_env : "mongodb://192.168.102.94:27017";  // fallback if env not set
 
     std::cout << uri << std::endl;
-    client = mongocxx::client{mongocxx::uri{uri}};
-    database = client["CCSDS_DB"];
+    client_ = mongocxx::client{mongocxx::uri{uri}};
+    database_ = client_["CCSDS_DB"];
 }
 
 
@@ -29,7 +30,7 @@ void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     // Serialize the extended_payload
     mongocxx::collection collection;
     std::string collection_name = "ExtendedPayloadP" + std::to_string(packet.sid);
-    collection = database[collection_name];
+    collection = database_[collection_name];
     bsoncxx::builder::basic::document doc{};
     insertHeader(doc, packet);
 
@@ -41,7 +42,7 @@ void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
     collection.insert_one(doc.view());
 
-    std::cout << "Packet inserted successfully." << std::endl;
+    LOG_INFO << "Packet inserted successfully.\n";
 }
 
 void MongoDBHandler::insertHeader(bsoncxx::builder::basic::document &document, const CCSDS_Packet &packet) {
@@ -60,7 +61,7 @@ void MongoDBHandler::insertHeader(bsoncxx::builder::basic::document &document, c
 }
 
 void MongoDBHandler::insertStructure(nlohmann::ordered_json json) {
-    mongocxx::collection collection = database["CCSDS_Structure"];
+    mongocxx::collection collection = database_["CCSDS_Structure"];
     collection.drop(); // Clear previous data
 
     int i = 1;
@@ -75,22 +76,22 @@ void MongoDBHandler::insertStructure(nlohmann::ordered_json json) {
         i++;
     }
 }
-nlohmann::ordered_json MongoDBHandler::ccsds_structure;
+nlohmann::ordered_json MongoDBHandler::ccsds_structure_;
 bool MongoDBHandler::loadStructure() {
     mongocxx::collection collection;
-    collection = database["CCSDS_Structure"];
+    collection = database_["CCSDS_Structure"];
     auto cursor = collection.find({});
-    MongoDBHandler::ccsds_structure = nlohmann::ordered_json::array();
+    MongoDBHandler::ccsds_structure_ = nlohmann::ordered_json::array();
     for (auto &&doc: cursor) {
         std::string json_str = bsoncxx::to_json(doc);
         nlohmann::ordered_json j = nlohmann::ordered_json::parse(json_str);
-        MongoDBHandler::ccsds_structure.push_back(j);
+        MongoDBHandler::ccsds_structure_.push_back(j);
     }
-    if (!MongoDBHandler::ccsds_structure.empty()) {
-        std::cout << "Structure loaded successfully from DB to RAM!" << std::endl;
+    if (!MongoDBHandler::ccsds_structure_.empty()) {
+        LOG_INFO << "Structure loaded successfully from DB to RAM!\n";
         return true;
     }
 
-    std::cout << "Structure could not load from DB to RAM!" << std::endl;
+    LOG_INFO << "Structure could not load from DB to RAM!\n";
     return false;
 }
