@@ -101,9 +101,12 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
     auto it = MongoDBHandler::ccsds_structure_.begin();
     std::advance(it, packet.sid - 1);
     for (auto topple = it->begin(); topple != it->end(); ++topple) {
-        std::string fieldName = topple.key();
+        const std::string& fieldName = topple.key();
         if (fieldName == "_id" || fieldName == "sub_system" || fieldName == "SID") {
             continue;
+        }
+        if (fieldName == "Q[2]6-ST2") {
+            cout << "Q[2]6-ST2";
         }
         std::string fieldType = topple.value();
         auto handler = handlers.find(fieldType);
@@ -172,6 +175,9 @@ template<typename T>
 void CCSDS_Packet::mapPayloadToMeaningfulData(size_t offset, const string &fieldName) {
     T value;
     std::memcpy(&value, payload.data() + offset, sizeof(T));
+//    if (value == INFINITY) {
+//        value = 0;
+//    }
     parsedData[fieldName] = value; // Implicitly constructs a FieldValue
 }
 

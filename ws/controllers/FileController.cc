@@ -3,7 +3,6 @@
 #include <thread>
 #include <iostream>
 
-#include "database/MongoDBHandler.h"
 #include "helpers/CCSDSPacketFileHelper.h"
 #include "helpers/UIDGeneratorHelper.h"
 

@@ -23,7 +23,7 @@ public:
     CCSDS_Packet();
 
     // Function to deserialize the 128-byte chunk into a Packet structure
-    CCSDS_Packet deserialize_packet(vector<uint8_t> &data);
+    CCSDS_Packet deserialize_packet(vector<uint8_t> &chunk);
 
     [[nodiscard]] Json::Value toJson() const;
 

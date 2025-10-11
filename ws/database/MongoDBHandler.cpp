@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include "logics/CCSDS_Packet.h"
 #include <drogon/HttpController.h>
+#include <stdexcept>
 
 MongoDBHandler::MongoDBHandler() {
     static mongocxx::instance instance{}; // Required once per application
@@ -28,21 +29,26 @@ MongoDBHandler::MongoDBHandler() {
 
 void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     // Serialize the extended_payload
-    mongocxx::collection collection;
-    std::string collection_name = "ExtendedPayloadP" + std::to_string(packet.sid);
-    collection = database_[collection_name];
-    bsoncxx::builder::basic::document doc{};
-    insertHeader(doc, packet);
+    try {
+        mongocxx::collection collection;
+        std::string collection_name = "SID" + std::to_string(packet.sid);
+        collection = database_[collection_name];
+        bsoncxx::builder::basic::document doc{};
+        insertHeader(doc, packet);
 
-    Json::StreamWriterBuilder writer;
-    std::string jsonStr = Json::writeString(writer, packet.parsedData);
+        Json::StreamWriterBuilder writer;
+        std::string jsonStr = Json::writeString(writer, packet.parsedData);
 
-    // Step 3: Parse JSON string into BSON
-    bsoncxx::document::value subDocument = bsoncxx::from_json(jsonStr);
-    doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
-    collection.insert_one(doc.view());
+        // Step 3: Parse JSON string into BSON
+        bsoncxx::document::value subDocument = bsoncxx::from_json(jsonStr);
+        doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
+        collection.insert_one(doc.view());
 
-    LOG_INFO << "Packet inserted successfully.\n";
+        LOG_INFO << "Packet inserted successfully.\n";
+    } catch (const exception &e) {
+        LOG_ERROR << "Exception caught: " << e.what() << "\n";
+    }
+
 }
 
 void MongoDBHandler::insertHeader(bsoncxx::builder::basic::document &document, const CCSDS_Packet &packet) {

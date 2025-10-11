@@ -59,6 +59,9 @@ void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, 
     std::vector<CCSDS_Packet> packets {};
     for (size_t i = 0; i < chunks.size(); ++i) {
         auto start = high_resolution_clock::now();
+        if (i == 64464) {
+            cout << i;
+        }
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
         auto end = high_resolution_clock::now();
         auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
