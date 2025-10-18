@@ -102,7 +102,7 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
     std::advance(it, packet.sid - 1);
     for (auto topple = it->begin(); topple != it->end(); ++topple) {
         const std::string& fieldName = topple.key();
-        if (fieldName == "_id" || fieldName == "sub_system" || fieldName == "SID") {
+        if (fieldName == "_id" || fieldName == "metadata") {
             continue;
         }
         if (fieldName == "Q[2]6-ST2") {

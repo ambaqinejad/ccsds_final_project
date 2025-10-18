@@ -27,7 +27,7 @@ private:
     mongocxx::client client_;
     mongocxx::database database_;
 
-    void insertHeader(bsoncxx::builder::basic::document& document, const CCSDS_Packet &packet);
+    static void insertHeader(bsoncxx::builder::basic::document& document, const CCSDS_Packet &packet);
 };
 
 

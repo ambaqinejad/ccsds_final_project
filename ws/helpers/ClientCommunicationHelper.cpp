@@ -7,9 +7,13 @@
 
 std::unordered_set<WebSocketConnectionPtr> ClientCommunicationHelper::clients;
 
-void ClientCommunicationHelper::notifyClients(double progress, CCSDS_Packet packet) {
+void ClientCommunicationHelper::notifyClients(double progress) {
     Json::Value msg;
-    msg["progress"] = progress;
+    if (progress == -1) {
+        msg["progress"] = "No Progress an Error Occur.";
+    } else {
+        msg["progress"] = progress;
+    }
 
 //    std::stringstream ss;
 //    ss << std::hex << std::uppercase << std::setfill('0');

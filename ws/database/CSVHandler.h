@@ -11,15 +11,11 @@ class CSVHandler {
 public:
     CSVHandler();
 
-    void insertPacket(const CCSDS_Packet &packet);
+    static void insertPacket(const CCSDS_Packet &packet);
 
 
 private:
     std::string csvFilePath;
-
-    void insertHeader(const CCSDS_Packet &packet, std::ofstream &file);
-    template <typename ArrayType>
-    std::string writeArray(const ArrayType* arr, size_t size);
 };
 
 #endif //FINAL_PROJECT_CSVHANDLER_H

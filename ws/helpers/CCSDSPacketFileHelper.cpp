@@ -67,10 +67,11 @@ void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, 
         auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
         cout << "Time (microseconds): " << duration_us.count() << " µs" << endl;
         packets.push_back(packet);
-        int progress = std::ceil(((double)i / count_of_valid_chunks) * 100);
+
         // notify clients each n times
         if (i % eachTimeNotifyClients == 0) {
-            ClientCommunicationHelper::notifyClients(progress, packet);
+            int progress = std::ceil(((double)i / (double) count_of_valid_chunks) * 100);
+            ClientCommunicationHelper::notifyClients(progress);
         }
     }
     CCSDSPacketFileHelper::uuidToSavedPacketsMapper[fileUUID] = packets;

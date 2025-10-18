@@ -9,7 +9,7 @@
 
 // Add definition of your processing function here
 void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
-                                                 std::function<void(const HttpResponsePtr &)> &&callback) const {
+                                                 std::function<void(const HttpResponsePtr &)> &&callback) {
     auto sidStr = (*req->getJsonObject())["sid"].asString();
     auto pageStr = (*req->getJsonObject())["page"].asString();
     auto pageSizeStr = (*req->getJsonObject())["pageSize"].asString();
@@ -75,7 +75,7 @@ void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
 }
 
 void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
-                                                  function<void(const HttpResponsePtr &)> &&callback) const {
+                                                  function<void(const HttpResponsePtr &)> &&callback) {
 
     std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
     auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
@@ -87,15 +87,15 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = packetsCopy->size() / 10;
+        int eachTimeNotifyClients = (int)packetsCopy->size() / 10;
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
 
             auto packet = packetsCopy->at(i);
-            int progress = std::ceil(((double)i / packetsCopy->size()) * 100);
 
             dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
-                ClientCommunicationHelper::notifyClients(progress, packet);
+                int progress = std::ceil(((double)i / (double) packetsCopy->size()) * 100);
+                ClientCommunicationHelper::notifyClients(progress);
             }
         }
 
@@ -107,7 +107,7 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
 }
 
 void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr &req,
-                                                            function<void(const HttpResponsePtr &)> &&callback) const {
+                                                            function<void(const HttpResponsePtr &)> &&callback) {
     MongoDBHandler dbHandler;
     auto sidStr = (*req->getJsonObject())["sid"].asString();
     int _sid = 0;
@@ -135,15 +135,15 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = packetsCopy->size() / 10;
+        int eachTimeNotifyClients = (int)packetsCopy->size() / 10;
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
 
             auto packet = packetsCopy->at(i);
-            int progress = std::ceil(((double)i / packetsCopy->size()) * 100);
 
             dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
-                ClientCommunicationHelper::notifyClients(progress, packet);
+                int progress = std::ceil(((double)i / (double)packetsCopy->size()) * 100);
+                ClientCommunicationHelper::notifyClients(progress);
             }
         }
 
@@ -155,7 +155,7 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
 }
 
 void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
-                                                  function<void(const HttpResponsePtr &)> &&callback) const {
+                                                  function<void(const HttpResponsePtr &)> &&callback) {
     std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
     auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
     if (it == CCSDSPacketFileHelper::uuidToSavedPacketsMapper.end()) {
@@ -165,17 +165,22 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
     const std::vector<CCSDS_Packet> allPackets = it->second;
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
     thread([packetsCopy]() {
-        CSVHandler csvHandler;
-        int eachTimeNotifyClients = packetsCopy->size() / 10;
-        for (size_t i = 0; i < packetsCopy->size(); ++i) {
+        try {
+            CSVHandler csvHandler;
+            int eachTimeNotifyClients = (int)packetsCopy->size() / 10;
+            for (size_t i = 0; i < packetsCopy->size(); ++i) {
 
-            auto packet = packetsCopy->at(i);
-            int progress = std::ceil(((double)i / packetsCopy->size()) * 100);
+                auto packet = packetsCopy->at(i);
 
-            csvHandler.insertPacket(packet);
-            if (i % eachTimeNotifyClients == 0) {
-                ClientCommunicationHelper::notifyClients(progress, packet);
+                csvHandler.insertPacket(packet);
+                if (i % eachTimeNotifyClients == 0) {
+                    int progress = std::ceil(((double)i / (double)packetsCopy->size()) * 100);
+                    ClientCommunicationHelper::notifyClients(progress);
+                }
             }
+        } catch (const exception &e) {
+            ClientCommunicationHelper::notifyClients(-1);
+            LOG_ERROR << "Exception caught: " << e.what() << "\n";
         }
 
     }).detach();
@@ -187,7 +192,7 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
 }
 
 void
-PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) const {
+PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) {
     std::string sid = (*req->getJsonObject())["sid"].asString();
 
     std::string fullPath = "uploads/ExtendedPayloadP" + sid + ".csv";

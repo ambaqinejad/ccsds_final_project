@@ -13,8 +13,6 @@
 
 using namespace std;
 
-using FieldValue = std::variant<uint8_t, uint16_t, uint32_t, uint64_t, int8_t, double_t, float_t>;
-
 
 class CCSDS_Packet {
 public:

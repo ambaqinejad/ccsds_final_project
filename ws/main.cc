@@ -5,7 +5,7 @@
 
 using namespace std;
 
-int main(int argc, char *argv[]) {
+int main(int argc, const char *argv[]) {
 
     MongoDBHandler dbHandler;
     if (dbHandler.loadStructure()) {

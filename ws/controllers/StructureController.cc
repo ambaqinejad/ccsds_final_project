@@ -2,7 +2,7 @@
 #include "helpers/StructureHelper.h"
 
 void StructureController::uploadFile(const drogon::HttpRequestPtr &req,
-                                     std::function<void(const HttpResponsePtr &)> &&callback) const {
+                                     std::function<void(const HttpResponsePtr &)> &&callback) {
     MultiPartParser fileUpload;
     if (fileUpload.parse(req) != 0 || fileUpload.getFiles().size() != 1) {
         auto resp = HttpResponse::newHttpResponse();

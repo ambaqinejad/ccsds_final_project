@@ -7,7 +7,6 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/uri.hpp>
 #include <mongocxx/client.hpp>
-#include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
 #include <json/json.h>
 #include <cstdlib>
@@ -82,22 +81,30 @@ void MongoDBHandler::insertStructure(nlohmann::ordered_json json) {
         i++;
     }
 }
+
+using bsoncxx::builder::stream::document;
+using bsoncxx::builder::stream::finalize;
 nlohmann::ordered_json MongoDBHandler::ccsds_structure_;
 bool MongoDBHandler::loadStructure() {
-    mongocxx::collection collection;
-    collection = database_["CCSDS_Structure"];
-    auto cursor = collection.find({});
-    MongoDBHandler::ccsds_structure_ = nlohmann::ordered_json::array();
-    for (auto &&doc: cursor) {
-        std::string json_str = bsoncxx::to_json(doc);
-        nlohmann::ordered_json j = nlohmann::ordered_json::parse(json_str);
-        MongoDBHandler::ccsds_structure_.push_back(j);
+    mongocxx::collection history_collection;
+    history_collection = database_["CCSDS_STRUCTURE_HISTORY"];
+    auto filter = document{} << "is_current" << true << finalize;
+    auto result = history_collection.find_one(filter.view());
+    if (result && (*result)["collection_name"]) {
+        std::cout << "Name: " << (*result)["collection_name"].get_string().value << std::endl;
+        mongocxx::collection structure_collection = database_[(*result)["collection_name"].get_string().value];
+        auto cursor = structure_collection.find({});
+        MongoDBHandler::ccsds_structure_ = nlohmann::ordered_json::array();
+        for (auto &&doc: cursor) {
+            std::string json_str = bsoncxx::to_json(doc);
+            nlohmann::ordered_json j = nlohmann::ordered_json::parse(json_str);
+            MongoDBHandler::ccsds_structure_.push_back(j);
+        }
+        if (!MongoDBHandler::ccsds_structure_.empty()) {
+            LOG_INFO << "Structure loaded successfully from DB to RAM!\n";
+            return true;
+        }
     }
-    if (!MongoDBHandler::ccsds_structure_.empty()) {
-        LOG_INFO << "Structure loaded successfully from DB to RAM!\n";
-        return true;
-    }
-
     LOG_INFO << "Structure could not load from DB to RAM!\n";
     return false;
 }

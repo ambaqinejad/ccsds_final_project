@@ -11,5 +11,5 @@ class StructureController : public drogon::HttpController<StructureController>
     ADD_METHOD_TO(StructureController::uploadFile, "/upload-structure", Post); // path is /absolute/path/{arg1}/{arg2}/list
 
     METHOD_LIST_END
-    void uploadFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
+    static void uploadFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
 };

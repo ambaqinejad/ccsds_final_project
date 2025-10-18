@@ -18,5 +18,5 @@ class FileController : public drogon::HttpController<FileController>
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(FileController::uploadFile, "/upload", Post);
     METHOD_LIST_END
-    void uploadFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
+    static void uploadFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
 };

@@ -18,10 +18,10 @@ class PacketController : public drogon::HttpController<PacketController>
     METHOD_LIST_END
     // your declaration of processing function maybe like this:
     // void get(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback, int p1, std::string p2);
-     void getSIDPacketsByPagination(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
-     void persistAllPacketsInMongoDB(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
-     void persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
-    void persistAllPacketsInCSVFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
-    void downloadCSVFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) const;
+    static void getSIDPacketsByPagination(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void persistAllPacketsInMongoDB(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void persistAllPacketsInCSVFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void downloadCSVFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
 
 };

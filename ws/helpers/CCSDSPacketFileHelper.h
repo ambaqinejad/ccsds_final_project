@@ -16,7 +16,7 @@
 
 class CCSDSPacketFileHelper {
 public:
-    static void processFile(const std::string &filename, const std::string &fileUUID);
+    static void processFile(const std::string &filePath, const std::string &fileUUID);
     static void parseData(std::vector<std::vector<uint8_t>> chunks, int count_of_valid_chunks, const std::string &fileUUID);
     static std::map<std::string, std::vector<CCSDS_Packet>> uuidToSavedPacketsMapper;
 };

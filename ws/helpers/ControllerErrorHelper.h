@@ -12,7 +12,7 @@ using namespace drogon;
 class ControllerErrorHelper {
 public:
     static void sendError(std::function<void(const HttpResponsePtr &)> &&callback,
-                          HttpStatusCode statusCode, string message);
+                          HttpStatusCode statusCode, const string& message);
 };
 
 

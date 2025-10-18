@@ -5,13 +5,10 @@
 #include "CSVHandler.h"
 
 #include <fstream>
-#include <iomanip>
 #include "logics/CCSDS_Packet.h"
 #include <drogon/drogon.h>
 
-CSVHandler::CSVHandler() {
-
-}
+CSVHandler::CSVHandler() = default;
 //
 void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
     std::string filename = "ExtendedPayloadP" + std::to_string(packet.sid) + ".csv";
@@ -25,10 +22,12 @@ void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
 
     // Collect all keys from parsedData
     std::vector<std::string> keys;
-    for (const auto& member : packet.parsedData.getMemberNames()) {
-        keys.push_back(member);
+    if (!packet.parsedData.isObject()) {
+        std::cerr << "parsedData is not an object!" << std::endl;
+        return;
     }
-
+    keys = packet.parsedData.getMemberNames();
+    
     // Check if header already exists
     std::ifstream checkFile(filePath);
     bool isEmpty = (checkFile.peek() == std::ifstream::traits_type::eof());
