@@ -11,6 +11,9 @@ void ClientCommunicationHelper::notifyClients(double progress) {
     Json::Value msg;
     if (progress == -1) {
         msg["progress"] = "No Progress an Error Occur.";
+    } else if (progress == 100) {
+        msg["progress"] = progress;
+        msg["status"] = "Completed";
     } else {
         msg["progress"] = progress;
     }

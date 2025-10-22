@@ -15,6 +15,6 @@ class FileWebSocket : public drogon::WebSocketController<FileWebSocket>
     void handleConnectionClosed(const WebSocketConnectionPtr&) override;
     WS_PATH_LIST_BEGIN
     // list path definitions here;
-    WS_PATH_ADD("/ws2", Get);
+    WS_PATH_ADD("/offline-parser-ws", Get);
     WS_PATH_LIST_END
 };

@@ -18,7 +18,7 @@ void StructureController::uploadFile(const drogon::HttpRequestPtr &req,
     file.setFileName("structure.json");
     file.save();
     std::string filePath = "uploads/" + file.getFileName();
-    msg["msg"] = "The uploaded file has been saved in path " + filePath;
+    msg["message"] = "The uploaded file has been saved";
     LOG_INFO << "The uploaded file has been saved to the ./uploads "
                 "directory";
     std::string resultMessage = StructureHelper::generateStructsFromJsonAndStoreInDB(filePath);

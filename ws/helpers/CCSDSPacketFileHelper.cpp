@@ -53,21 +53,19 @@ void CCSDSPacketFileHelper::processFile(const string &filePath, const std::strin
 }
 
 std::map<std::string, std::vector<CCSDS_Packet>> CCSDSPacketFileHelper::uuidToSavedPacketsMapper;
+std::map<std::string, std::set<uint8_t >> CCSDSPacketFileHelper::uuidToSids;
 void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, int count_of_valid_chunks, const std::string &fileUUID) {
 
     int eachTimeNotifyClients = count_of_valid_chunks / 10;
     std::vector<CCSDS_Packet> packets {};
     for (size_t i = 0; i < chunks.size(); ++i) {
         auto start = high_resolution_clock::now();
-        if (i == 64464) {
-            cout << i;
-        }
         CCSDS_Packet packet = packet.deserialize_packet(chunks.at(i));
         auto end = high_resolution_clock::now();
         auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
         cout << "Time (microseconds): " << duration_us.count() << " µs" << endl;
         packets.push_back(packet);
-
+        CCSDSPacketFileHelper::uuidToSids[fileUUID].insert(packet.sid);
         // notify clients each n times
         if (i % eachTimeNotifyClients == 0) {
             int progress = std::ceil(((double)i / (double) count_of_valid_chunks) * 100);

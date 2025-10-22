@@ -105,9 +105,6 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
         if (fieldName == "_id" || fieldName == "metadata") {
             continue;
         }
-        if (fieldName == "Q[2]6-ST2") {
-            cout << "Q[2]6-ST2";
-        }
         std::string fieldType = topple.value();
         auto handler = handlers.find(fieldType);
         if (handler != handlers.end()) {

@@ -25,6 +25,9 @@ int main(int argc, const char *argv[]) {
     cout << "Starting WebSocket server on port " << port << endl;
 
     auto &app = drogon::app();
+//    app.setDocumentRoot("/home/ambaqinejad/Desktop/drogon_cc/cc/ws");
+
+//    app.setDocumentRoot("/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/CMakeFiles/uploads")
 
     // 1️⃣ Handle OPTIONS (CORS preflight)
     app.registerPreRoutingAdvice([](const drogon::HttpRequestPtr &req,
@@ -43,24 +46,6 @@ int main(int argc, const char *argv[]) {
         }
     });
 
-    // 2️⃣ Handle routes like /ws/negotiate that may not hit controllers
-    app.registerPostRoutingAdvice([](const drogon::HttpRequestPtr &req,
-                                     drogon::AdviceCallback &&acb,
-                                     drogon::AdviceChainCallback &&accb) {
-        if (req->path().find("/ws2") != std::string::npos) {
-            cout << "!23";
-            auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->addHeader("Access-Control-Allow-Origin", "*");
-            resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            resp->addHeader("Access-Control-Allow-Headers",
-                            "Content-Type, Authorization, X-Requested-With, x-signalr-user-agent");
-            resp->setStatusCode(drogon::k200OK);
-            acb(resp);
-        } else {
-            accb();  // Continue normal response flow
-        }
-    });
-
     // 3️⃣ Add CORS headers to all valid responses
     app.registerPostHandlingAdvice([](const drogon::HttpRequestPtr &req,
                                       const drogon::HttpResponsePtr &resp) {
@@ -70,39 +55,11 @@ int main(int argc, const char *argv[]) {
                         "Content-Type, Authorization, X-Requested-With, x-signalr-user-agent");
     });
 
-    // ✅ 3. Create /ws2/negotiate endpoint for SignalR/WebSocket clients
-//    app.registerHandler(
-//            "/ws2/negotiate",
-//            [](const drogon::HttpRequestPtr &req,
-//               std::function<void(const drogon::HttpResponsePtr &)> &&callback) {
-//                Json::Value responseJson;
-//                responseJson["connectionId"] = "dummy-connection-id";
-//                responseJson["connectionToken"] = "dummy-connection-token";
-//                responseJson["protocolVersion"] = "1.5";
-//
-//                Json::Value wsTransport;
-//                wsTransport["transport"] = "WebSockets";
-//                wsTransport["transferFormats"] = Json::arrayValue;
-//                wsTransport["transferFormats"].append("Text");
-//
-//                responseJson["availableTransports"] = Json::arrayValue;
-//                responseJson["availableTransports"].append(wsTransport);
-//
-//                auto resp = drogon::HttpResponse::newHttpJsonResponse(responseJson);
-//                resp->addHeader("Access-Control-Allow-Origin", "*");
-//                resp->addHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-//                resp->addHeader("Access-Control-Allow-Headers",
-//                                "Content-Type, Authorization, X-Requested-With, x-signalr-user-agent");
-//
-//                callback(resp);
-//            },
-//            {drogon::Get, drogon::Post, drogon::Options});
-
     // 4️⃣ Configure Drogon app
     app.setClientMaxBodySize(20 * 2000 * 2000)
             .setUploadPath("./uploads")
             .addListener("0.0.0.0", port)
             .run();
-
+    cout << app.getUploadPath() << endl;
     return 0;
 }

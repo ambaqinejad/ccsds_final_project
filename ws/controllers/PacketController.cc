@@ -101,7 +101,7 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
 
     }).detach();
     Json::Value pktJson;
-    pktJson["message"] = "Packets insertion is in progress. Check socket connection.";
+    pktJson["message"] = "Packets insertion is in progress.";
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);
     callback(resp);
 }
@@ -185,7 +185,7 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
 
     }).detach();
     Json::Value pktJson;
-    pktJson["message"] = "Packets insertion is in progress. Check socket connection.";
+    pktJson["message"] = "Packets insertion is in progress.";
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);
     callback(resp);
 
@@ -195,6 +195,8 @@ void
 PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) {
     std::string sid = (*req->getJsonObject())["sid"].asString();
 
+//    drogon::app().getDocumentRoot()
+//    std::string fullPath = drogon::app().getDocumentRoot() + "uploads/ExtendedPayloadP" + sid + ".csv";
     std::string fullPath = "uploads/ExtendedPayloadP" + sid + ".csv";
     std::string filename = "ExtendedPayloadP" + sid + ".csv";
     std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
@@ -216,6 +218,34 @@ PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const
     resp->setBody(std::move(fileData));
     resp->addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
     resp->setContentTypeCode(CT_APPLICATION_OCTET_STREAM);
+    callback(resp);
+}
+
+void
+PacketController::getSidsList(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback, const string& fileUUID) {
+
+//    if (fileUUID) {
+//        return ControllerErrorHelper::sendError(std::move(callback), k400BadRequest, "Missing fileUUID.");
+//    }
+
+    // Get packets from UUID mapping
+    auto it = CCSDSPacketFileHelper::uuidToSids.find(fileUUID);
+    if (it == CCSDSPacketFileHelper::uuidToSids.end()) {
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
+    }
+
+    const std::set<uint8_t > &allSids = it->second;
+
+    // Convert to JSON
+    Json::Value sidJson;
+    sidJson["fileUUID"] = fileUUID;
+    sidJson["num of all sids"] = static_cast<int>(allSids.size());
+    Json::Value sidArray(Json::arrayValue);
+    for (uint8_t sid : allSids) {
+        sidArray.append(static_cast<int>(sid)); // JSON only has numbers, so cast to int
+    }
+    sidJson["sids"] = sidArray;
+    auto resp = HttpResponse::newHttpJsonResponse(sidJson);
     callback(resp);
 }
 

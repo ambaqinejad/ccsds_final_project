@@ -8,6 +8,7 @@ void FileWebSocket::handleNewMessage(const WebSocketConnectionPtr& wsConnPtr, st
 void FileWebSocket::handleNewConnection(const HttpRequestPtr &req, const WebSocketConnectionPtr& wsConnPtr)
 {
     // write your application logic here
+    cout << "New Web Socket Connection" << endl;
     ClientCommunicationHelper::clients.insert(wsConnPtr);
 }
 
