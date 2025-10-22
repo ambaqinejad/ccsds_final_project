@@ -17,7 +17,7 @@ services:
     depends_on:
       - ws
     environment:
-      - MONGODB_URI=mongodb://192.168.102.79:27017
+      - MONGODB_URI=mongodb://host.docker.internal:27017
       - DEFAULT_STRUCTURE_FILE_PATH=uploads/default_structure.json
     deploy:
       resources:
