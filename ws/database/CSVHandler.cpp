@@ -3,16 +3,27 @@
 ////
 //
 #include "CSVHandler.h"
-
 #include <fstream>
 #include "logics/CCSDS_Packet.h"
 #include <drogon/drogon.h>
+#include <filesystem>
+namespace fs = std::filesystem;
 
 CSVHandler::CSVHandler() = default;
-//
-void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
+
+void CSVHandler::insertPacket(const CCSDS_Packet &packet, const string& fileUUID) {
+    const char* directory_base_path = std::getenv("DOCUMENT_ROOT");
+    string directoryBasePath = directory_base_path ? directory_base_path : "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public";
+
     std::string filename = "ExtendedPayloadP" + std::to_string(packet.sid) + ".csv";
-    std::string filePath = "uploads/" + filename;
+    std::string directoryPath = directoryBasePath + "/" + fileUUID;
+    if (!fs::exists(directoryPath)) {
+        if (!fs::create_directory(directoryPath)) {
+            std::cerr << "Failed to create directory: " << directoryPath << std::endl;
+            return;
+        }
+    }
+    std::string filePath = directoryPath + "/" + filename;
     // Open file in append mode
     std::ofstream csvFile(filePath, std::ios::app);
     if (!csvFile.is_open()) {
@@ -53,17 +64,9 @@ void CSVHandler::insertPacket(const CCSDS_Packet &packet) {
     csvFile << static_cast<int>(packet.flash_address);
     for (const auto& key : keys) {
         csvFile << ',' << packet.parsedData[key].asString();
-//        if (packet.parsedData[key].isString())
-//            csvFile << ',' << packet.parsedData[key].asString();
-//        else if (packet.parsedData[key].isNumeric())
-//            csvFile << ',' << packet.parsedData[key].asDouble();
-//        else
-//            csvFile << ',' << std::quoted(packet.parsedData[key].toStyledString());
     }
     csvFile << '\n';
-
     csvFile.close();
     LOG_INFO << "Packet written to CSV with flattened fields.\n";
-
     LOG_INFO << "Packet inserted successfully.\n";
 }

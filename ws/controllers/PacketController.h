@@ -8,11 +8,11 @@ class PacketController : public drogon::HttpController<PacketController>
 {
   public:
     METHOD_LIST_BEGIN
-    ADD_METHOD_TO(PacketController::getSIDPacketsByPagination, "/getSIDPacketsByPagination", Post);
+    ADD_METHOD_TO(PacketController::getSIDPacketsByPagination, "/getSIDPacketsByPagination", Get);
     ADD_METHOD_TO(PacketController::persistAllPacketsInMongoDB, "/persistAllPacketsInMongoDB", Post);
     ADD_METHOD_TO(PacketController::persistAllPacketsInMongoDBBasedOnSID, "/persistAllPacketsInMongoDBBasedOnSID", Post);
     ADD_METHOD_TO(PacketController::persistAllPacketsInCSVFile, "/persistAllPacketsInCSVFile", Post);
-    ADD_METHOD_TO(PacketController::downloadCSVFile, "/downloadCSVFile", Post);
+    ADD_METHOD_TO(PacketController::downloadCSVFile, "/downloadCSVFile", Get);
     ADD_METHOD_TO(PacketController::getSidsList, "/getSidsList/{fileUUID}", Get);
 
 

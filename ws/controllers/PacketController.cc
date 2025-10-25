@@ -6,13 +6,16 @@
 #include "database/MongoDBHandler.h"
 #include "database/CSVHandler.h"
 #include "helpers/ClientCommunicationHelper.h"
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 // Add definition of your processing function here
 void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
                                                  std::function<void(const HttpResponsePtr &)> &&callback) {
-    auto sidStr = (*req->getJsonObject())["sid"].asString();
-    auto pageStr = (*req->getJsonObject())["page"].asString();
-    auto pageSizeStr = (*req->getJsonObject())["pageSize"].asString();
+    auto sidStr = req->getParameter("sid");
+    auto pageStr = req->getParameter("page");
+    auto pageSizeStr = req->getParameter("pageSize");
 
     int _sid = 0;
     int _page = 0;
@@ -27,7 +30,7 @@ void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
         ControllerErrorHelper::sendError(std::move(callback), k400BadRequest,
                                          "Invalid sid or page or pageSize parameter.");
     }
-    std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
+    std::string fileUUID = req->getParameter("fileUUID");
 
     // Get packets from UUID mapping
     auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
@@ -61,7 +64,9 @@ void PacketController::getSIDPacketsByPagination(const HttpRequestPtr &req,
     Json::Value pktJson;
     pktJson["num of all packets"] = static_cast<int>(allPackets.size());
     pktJson["num of all packets with this sid"] = static_cast<int>(filteredPackets.size());
-    pktJson["total pages"] = filteredPackets.size() % _pageSize != 0 ? filteredPackets.size() / _pageSize + 1 : filteredPackets.size() / _pageSize;
+    pktJson["total pages"] =
+            filteredPackets.size() % _pageSize != 0 ? filteredPackets.size() / _pageSize + 1 : filteredPackets.size() /
+                                                                                               _pageSize;
     pktJson["sid"] = _sid;
     Json::Value resultJson(Json::arrayValue);
     for (const auto &pkt: paginatedPackets) {
@@ -87,14 +92,14 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = (int)packetsCopy->size() / 10;
+        int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
 
             auto packet = packetsCopy->at(i);
 
             dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
-                int progress = std::ceil(((double)i / (double) packetsCopy->size()) * 100);
+                int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
                 ClientCommunicationHelper::notifyClients(progress);
             }
         }
@@ -116,7 +121,7 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
     }
     catch (const std::exception &e) {
         return ControllerErrorHelper::sendError(std::move(callback), k400BadRequest,
-                                         "Invalid sid parameter.");
+                                                "Invalid sid parameter.");
     }
     std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
     auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
@@ -135,14 +140,14 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = (int)packetsCopy->size() / 10;
+        int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
 
             auto packet = packetsCopy->at(i);
 
             dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
-                int progress = std::ceil(((double)i / (double)packetsCopy->size()) * 100);
+                int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
                 ClientCommunicationHelper::notifyClients(progress);
             }
         }
@@ -164,17 +169,14 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
 
     const std::vector<CCSDS_Packet> allPackets = it->second;
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
-    thread([packetsCopy]() {
+    thread([packetsCopy, fileUUID]() {
         try {
-            CSVHandler csvHandler;
-            int eachTimeNotifyClients = (int)packetsCopy->size() / 10;
+            int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
             for (size_t i = 0; i < packetsCopy->size(); ++i) {
-
                 auto packet = packetsCopy->at(i);
-
-                csvHandler.insertPacket(packet);
+                CSVHandler::insertPacket(packet, fileUUID);
                 if (i % eachTimeNotifyClients == 0) {
-                    int progress = std::ceil(((double)i / (double)packetsCopy->size()) * 100);
+                    int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
                     ClientCommunicationHelper::notifyClients(progress);
                 }
             }
@@ -188,41 +190,37 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
     pktJson["message"] = "Packets insertion is in progress.";
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);
     callback(resp);
-
 }
 
 void
 PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) {
-    std::string sid = (*req->getJsonObject())["sid"].asString();
+    string sid = req->getParameter("sid");
+    string fileUUID = req->getParameter("fileUUID");
 
-//    drogon::app().getDocumentRoot()
-//    std::string fullPath = drogon::app().getDocumentRoot() + "uploads/ExtendedPayloadP" + sid + ".csv";
-    std::string fullPath = "uploads/ExtendedPayloadP" + sid + ".csv";
+    const char* directory_base_path = std::getenv("DOCUMENT_ROOT");
+    string directoryBasePath = directory_base_path ? directory_base_path : "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public";
+
+
     std::string filename = "ExtendedPayloadP" + sid + ".csv";
-    std::ifstream file(fullPath, std::ios::binary | std::ios::ate);
-    if (!file.is_open()) {
-        auto resp = HttpResponse::newHttpResponse();
-        resp->setStatusCode(k404NotFound);
-        resp->setBody("File not found");
-        callback(resp);
-        return;
+    std::string directoryPath = directoryBasePath + "/" + fileUUID;
+    if (!fs::exists(directoryPath)) {
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
     }
 
-    auto fileSize = file.tellg();
-    file.seekg(0, std::ios::beg);
-    std::string fileData(fileSize, '\0');
-    file.read(&fileData[0], fileSize);
-    file.close();
-
-    auto resp = HttpResponse::newHttpResponse();
-    resp->setBody(std::move(fileData));
-    resp->addHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-    resp->setContentTypeCode(CT_APPLICATION_OCTET_STREAM);
+    std::string filePath = directoryPath + "/" + filename;
+    // Open file in append mode
+    std::ofstream csvFile(filePath, std::ios::app);
+    if (!csvFile.is_open()) {
+        std::cerr << "Failed to open CSV file." << std::endl;
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "Failed to open CSV file.");
+    }
+    auto resp = HttpResponse::newFileResponse(filePath, filename);
     callback(resp);
 }
 
 void
-PacketController::getSidsList(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback, const string& fileUUID) {
+PacketController::getSidsList(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback,
+                              const string &fileUUID) {
 
 //    if (fileUUID) {
 //        return ControllerErrorHelper::sendError(std::move(callback), k400BadRequest, "Missing fileUUID.");
@@ -234,15 +232,28 @@ PacketController::getSidsList(const HttpRequestPtr &req, function<void(const Htt
         return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
     }
 
-    const std::set<uint8_t > &allSids = it->second;
+    const std::set<uint8_t> &allSids = it->second;
 
     // Convert to JSON
     Json::Value sidJson;
     sidJson["fileUUID"] = fileUUID;
-    sidJson["num of all sids"] = static_cast<int>(allSids.size());
+    sidJson["numOfAllSids"] = static_cast<int>(allSids.size());
     Json::Value sidArray(Json::arrayValue);
-    for (uint8_t sid : allSids) {
-        sidArray.append(static_cast<int>(sid)); // JSON only has numbers, so cast to int
+    for (uint8_t sid: allSids) {
+        Json::Value obj(Json::objectValue);
+        auto &ccsds_structure = MongoDBHandler::ccsds_structure_;
+        uint8_t index = sid - 1;
+        if (index < ccsds_structure.size()) {
+            const auto &entry = ccsds_structure[index];
+            if (entry.contains("metadata") &&
+                entry["metadata"].contains("sub_system")) {
+                std::string subSystem = entry["metadata"]["sub_system"];
+                std::cout << "sub_system: " << subSystem << std::endl;
+                obj["sid"] = sid;  // numeric
+                obj["sub_system"] = subSystem;  // your lookup method
+                sidArray.append(obj);
+            }
+        }
     }
     sidJson["sids"] = sidArray;
     auto resp = HttpResponse::newHttpJsonResponse(sidJson);

@@ -18,6 +18,7 @@ services:
       - ws
     environment:
       - MONGODB_URI=mongodb://host.docker.internal:27017
+      - DOCUMENT_ROOT=/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public
       - DEFAULT_STRUCTURE_FILE_PATH=uploads/default_structure.json
     deploy:
       resources:

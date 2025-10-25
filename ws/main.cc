@@ -14,6 +14,9 @@ using namespace std;
 
 int main(int argc, const char *argv[]) {
 
+    const char* document_root = std::getenv("DOCUMENT_ROOT");
+    string documentRoot = document_root ? document_root : "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public";
+
     MongoDBHandler dbHandler;
     if (!dbHandler.loadStructure()) {
         LOG_INFO << "Websocket server could not start because structure did not load.";
@@ -23,11 +26,7 @@ int main(int argc, const char *argv[]) {
     int port = 5000;
     if (argc > 1) port = stoi(argv[1]);
     cout << "Starting WebSocket server on port " << port << endl;
-
     auto &app = drogon::app();
-//    app.setDocumentRoot("/home/ambaqinejad/Desktop/drogon_cc/cc/ws");
-
-//    app.setDocumentRoot("/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/CMakeFiles/uploads")
 
     // 1️⃣ Handle OPTIONS (CORS preflight)
     app.registerPreRoutingAdvice([](const drogon::HttpRequestPtr &req,
@@ -59,6 +58,9 @@ int main(int argc, const char *argv[]) {
     app.setClientMaxBodySize(20 * 2000 * 2000)
             .setUploadPath("./uploads")
             .addListener("0.0.0.0", port)
+            .setDocumentRoot(documentRoot)
+            .registerCustomExtensionMime("csv", "application/octet-stream") // Force download for CSV
+            .registerCustomExtensionMime("txt", "text/plain") // Explicitly set txt MIME type
             .run();
     cout << app.getUploadPath() << endl;
     return 0;
