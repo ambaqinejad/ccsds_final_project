@@ -221,12 +221,6 @@ PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const
 void
 PacketController::getSidsList(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback,
                               const string &fileUUID) {
-
-//    if (fileUUID) {
-//        return ControllerErrorHelper::sendError(std::move(callback), k400BadRequest, "Missing fileUUID.");
-//    }
-
-    // Get packets from UUID mapping
     auto it = CCSDSPacketFileHelper::uuidToSids.find(fileUUID);
     if (it == CCSDSPacketFileHelper::uuidToSids.end()) {
         return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
@@ -257,6 +251,57 @@ PacketController::getSidsList(const HttpRequestPtr &req, function<void(const Htt
     }
     sidJson["sids"] = sidArray;
     auto resp = HttpResponse::newHttpJsonResponse(sidJson);
+    callback(resp);
+}
+
+void PacketController::persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr &req,
+                                                            function<void(const HttpResponsePtr &)> &&callback) {
+
+    auto sidStr = (*req->getJsonObject())["sid"].asString();
+    int _sid = 0;
+    try {
+        _sid = std::stoi(sidStr);
+    }
+    catch (const std::exception &e) {
+        return ControllerErrorHelper::sendError(std::move(callback), k400BadRequest,
+                                                "Invalid sid parameter.");
+    }
+    std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
+    auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
+    if (it == CCSDSPacketFileHelper::uuidToSavedPacketsMapper.end()) {
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
+    }
+
+    const std::vector<CCSDS_Packet> &allPackets = it->second;
+    std::vector<CCSDS_Packet> filteredPackets;
+    for (const auto &pkt: allPackets) {
+        if (pkt.sid == _sid) // assuming CCSDS_Packet has a `sid` field
+        {
+            filteredPackets.push_back(pkt);
+        }
+    }
+    auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
+    thread([packetsCopy, fileUUID]() {
+        try {
+            int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
+            for (size_t i = 0; i < packetsCopy->size(); ++i) {
+                auto packet = packetsCopy->at(i);
+                CSVHandler::insertPacket(packet, fileUUID);
+                if (i % eachTimeNotifyClients == 0) {
+                    int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
+                    ClientCommunicationHelper::notifyClients(progress);
+                }
+            }
+        } catch (const exception &e) {
+            ClientCommunicationHelper::notifyClients(-1);
+            LOG_ERROR << "Exception caught: " << e.what() << "\n";
+        }
+
+    }).detach();
+    Json::Value pktJson;
+    pktJson["message"] = "Packets are inserting. Check web socket.";
+    pktJson["link"] = "http://192.168.102.39:5000/downloadCSVFile?fileUUID=" + fileUUID + "&sid=" + sidStr;
+    auto resp = HttpResponse::newHttpJsonResponse(pktJson);
     callback(resp);
 }
 

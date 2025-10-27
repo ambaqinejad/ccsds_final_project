@@ -55,7 +55,7 @@ int main(int argc, const char *argv[]) {
     });
 
     // 4️⃣ Configure Drogon app
-    app.setClientMaxBodySize(20 * 2000 * 2000)
+    app.setClientMaxBodySize(200 * 2000 * 2000)
             .setUploadPath("./uploads")
             .addListener("0.0.0.0", port)
             .setDocumentRoot(documentRoot)
