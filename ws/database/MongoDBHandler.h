@@ -18,7 +18,7 @@ class MongoDBHandler {
 public:
     MongoDBHandler();
 
-    void insertPacket(const CCSDS_Packet &packet);
+    bool insertPacket(const CCSDS_Packet &packet);
     void insertStructure(nlohmann::ordered_json json);
     bool loadStructure();
     static nlohmann::ordered_json ccsds_structure_;

@@ -6,26 +6,39 @@
 using namespace std;
 
 #include <drogon/HttpFilter.h>
-
-#include <drogon/drogon.h>
-//#include "MongoDBHandler.h"
+#include "helpers/EnvHelper.h"
+#include <filesystem>
 
 using namespace std;
+namespace fs = std::filesystem;
 
 int main(int argc, const char *argv[]) {
-
-    const char* document_root = std::getenv("DOCUMENT_ROOT");
-    string documentRoot = document_root ? document_root : "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public";
-
+    string documentRoot = EnvHelper::readEnvVariable("DOCUMENT_ROOT",
+                          "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public");
+    string uploadPath = documentRoot + "/uploads";
     MongoDBHandler dbHandler;
     if (!dbHandler.loadStructure()) {
         LOG_INFO << "Websocket server could not start because structure did not load.";
         return 0;
     }
 
+    if (!fs::exists(documentRoot)) {
+        if (!fs::create_directory(documentRoot)) {
+            LOG_INFO << "Websocket server could not start because it can not create public folder.";
+            return -1;
+        }
+    }
+
+    if (!fs::exists(uploadPath)) {
+        if (!fs::create_directory(uploadPath)) {
+            LOG_INFO << "Websocket server could not start because it can not create upload folder.";
+            return -1;
+        }
+    }
+
     int port = 5000;
     if (argc > 1) port = stoi(argv[1]);
-    cout << "Starting WebSocket server on port " << port << endl;
+    LOG_INFO << "Starting WebSocket server on port " << port;
     auto &app = drogon::app();
 
     // 1️⃣ Handle OPTIONS (CORS preflight)
@@ -56,12 +69,11 @@ int main(int argc, const char *argv[]) {
 
     // 4️⃣ Configure Drogon app
     app.setClientMaxBodySize(200 * 2000 * 2000)
-            .setUploadPath("./uploads")
+            .setUploadPath(uploadPath)
             .addListener("0.0.0.0", port)
             .setDocumentRoot(documentRoot)
-            .registerCustomExtensionMime("csv", "application/octet-stream") // Force download for CSV
-            .registerCustomExtensionMime("txt", "text/plain") // Explicitly set txt MIME type
+//            .registerCustomExtensionMime("csv", "application/octet-stream") // Force download for CSV
+//            .registerCustomExtensionMime("txt", "text/plain") // Explicitly set txt MIME type
             .run();
-    cout << app.getUploadPath() << endl;
     return 0;
 }

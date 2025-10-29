@@ -17,6 +17,7 @@ class ClientCommunicationHelper {
 public:
     static void notifyClients(double progress);
     static unordered_set<WebSocketConnectionPtr> clients;
+    static const int progressDivider = 50;
 };
 
 

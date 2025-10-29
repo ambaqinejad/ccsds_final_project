@@ -2,9 +2,9 @@
 #include <drogon/drogon.h>
 #include <thread>
 #include <iostream>
-
 #include "helpers/CCSDSPacketFileHelper.h"
 #include "helpers/UIDGeneratorHelper.h"
+#include "helpers/EnvHelper.h"
 
 // this class is for working with file that is uploaded to the server for processing
 
@@ -26,13 +26,15 @@ void FileController::uploadFile(const HttpRequestPtr &req, std::function<void(co
     Json::Value msg;
     file.setFileName(fileName);
     file.save();
-    string filePath = "uploads/" + file.getFileName();
+    string documentRoot = EnvHelper::readEnvVariable("DOCUMENT_ROOT",
+                                     "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public");
+    string uploadPath = documentRoot + "/uploads";
+    string filePath = uploadPath + "/" + file.getFileName();
     msg["fileUUID"] = fileUUID;
     msg["message"] = "The uploaded file has been saved";
     auto resp = HttpResponse::newHttpJsonResponse(msg);
     thread([filePath, fileUUID]() { CCSDSPacketFileHelper::processFile(filePath, fileUUID); }).detach();
-    LOG_INFO << "The uploaded file has been saved to the ./uploads "
-                "directory";
+    LOG_INFO << "The uploaded file has been saved to the " + uploadPath;
     callback(resp);
 }
 

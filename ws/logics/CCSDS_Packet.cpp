@@ -160,9 +160,6 @@ Json::Value CCSDS_Packet::toJson() const {
     // Optional: Dump payload as hex or array
     Json::Value parsedDataObj(Json::objectValue);
     parsedDataObj = parsedData;
-//    for (const auto &byte: payload) {
-//        payloadArray.append(byte); // or format as hex
-//    }
     msg["payload"] = parsedDataObj;
 
     return msg;

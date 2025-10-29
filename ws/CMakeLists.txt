@@ -39,6 +39,7 @@ add_executable(${PROJECT_NAME} main.cc
         helpers/ControllerErrorHelper.h
         helpers/StructureHelper.cpp
         helpers/StructureHelper.h
+        helpers/EnvHelper.h
 )
 
 # ##############################################################################

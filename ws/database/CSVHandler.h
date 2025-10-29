@@ -11,7 +11,7 @@ class CSVHandler {
 public:
     CSVHandler();
 
-    static void insertPacket(const CCSDS_Packet &packet, const string& fileUUID);
+    static bool insertPacket(const CCSDS_Packet &packet, const string& fileUUID);
 
 
 private:

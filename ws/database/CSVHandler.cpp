@@ -7,20 +7,23 @@
 #include "logics/CCSDS_Packet.h"
 #include <drogon/drogon.h>
 #include <filesystem>
+#include "helpers/EnvHelper.h"
+#include <chrono>
+using namespace std::chrono;
 namespace fs = std::filesystem;
 
 CSVHandler::CSVHandler() = default;
 
-void CSVHandler::insertPacket(const CCSDS_Packet &packet, const string& fileUUID) {
-    const char* directory_base_path = std::getenv("DOCUMENT_ROOT");
-    string directoryBasePath = directory_base_path ? directory_base_path : "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public";
-
-    std::string filename = "ExtendedPayloadP" + std::to_string(packet.sid) + ".csv";
+bool CSVHandler::insertPacket(const CCSDS_Packet &packet, const string& fileUUID) {
+    auto start = high_resolution_clock::now();
+    string directoryBasePath = EnvHelper::readEnvVariable("DOCUMENT_ROOT",
+                                          "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public");
+    std::string filename = "SID" + std::to_string(packet.sid) + ".csv";
     std::string directoryPath = directoryBasePath + "/" + fileUUID;
     if (!fs::exists(directoryPath)) {
         if (!fs::create_directory(directoryPath)) {
-            std::cerr << "Failed to create directory: " << directoryPath << std::endl;
-            return;
+            LOG_INFO << "Failed to create directory: " << directoryPath;
+            return false;
         }
     }
     std::string filePath = directoryPath + "/" + filename;
@@ -28,14 +31,14 @@ void CSVHandler::insertPacket(const CCSDS_Packet &packet, const string& fileUUID
     std::ofstream csvFile(filePath, std::ios::app);
     if (!csvFile.is_open()) {
         std::cerr << "Failed to open CSV file." << std::endl;
-        return;
+        return false;
     }
 
     // Collect all keys from parsedData
     std::vector<std::string> keys;
     if (!packet.parsedData.isObject()) {
         std::cerr << "parsedData is not an object!" << std::endl;
-        return;
+        return false;
     }
     keys = packet.parsedData.getMemberNames();
     
@@ -67,6 +70,8 @@ void CSVHandler::insertPacket(const CCSDS_Packet &packet, const string& fileUUID
     }
     csvFile << '\n';
     csvFile.close();
-    LOG_INFO << "Packet written to CSV with flattened fields.\n";
-    LOG_INFO << "Packet inserted successfully.\n";
+    auto end = high_resolution_clock::now();
+    auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
+    LOG_INFO << "Packet inserted successfully. Time (microseconds): " << duration_us.count() << " µs";
+    return true;
 }

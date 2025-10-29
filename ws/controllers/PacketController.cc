@@ -7,6 +7,7 @@
 #include "database/CSVHandler.h"
 #include "helpers/ClientCommunicationHelper.h"
 #include <filesystem>
+#include "helpers/EnvHelper.h"
 
 namespace fs = std::filesystem;
 
@@ -92,18 +93,15 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
+        int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
-
             auto packet = packetsCopy->at(i);
-
-            dbHandler.insertPacket(packet);
+            bool isSuccessful = dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
                 int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
-                ClientCommunicationHelper::notifyClients(progress);
+                ClientCommunicationHelper::notifyClients(isSuccessful ? progress : -1);
             }
         }
-
     }).detach();
     Json::Value pktJson;
     pktJson["message"] = "Packets insertion is in progress.";
@@ -140,21 +138,18 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
+        int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
-
             auto packet = packetsCopy->at(i);
-
             dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
                 int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
                 ClientCommunicationHelper::notifyClients(progress);
             }
         }
-
     }).detach();
     Json::Value pktJson;
-    pktJson["message"] = "Packets inserted successfully.";
+    pktJson["message"] = "Packets insertion is in progress.";
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);
     callback(resp);
 }
@@ -166,18 +161,17 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
     if (it == CCSDSPacketFileHelper::uuidToSavedPacketsMapper.end()) {
         return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
     }
-
     const std::vector<CCSDS_Packet> allPackets = it->second;
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
     thread([packetsCopy, fileUUID]() {
         try {
-            int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
+            int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
             for (size_t i = 0; i < packetsCopy->size(); ++i) {
                 auto packet = packetsCopy->at(i);
-                CSVHandler::insertPacket(packet, fileUUID);
+                bool isSuccessful = CSVHandler::insertPacket(packet, fileUUID);
                 if (i % eachTimeNotifyClients == 0) {
                     int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
-                    ClientCommunicationHelper::notifyClients(progress);
+                    ClientCommunicationHelper::notifyClients(isSuccessful ? progress : -1);
                 }
             }
         } catch (const exception &e) {
@@ -196,22 +190,18 @@ void
 PacketController::downloadCSVFile(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) {
     string sid = req->getParameter("sid");
     string fileUUID = req->getParameter("fileUUID");
-
-    const char* directory_base_path = std::getenv("DOCUMENT_ROOT");
-    string directoryBasePath = directory_base_path ? directory_base_path : "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public";
-
-
-    std::string filename = "ExtendedPayloadP" + sid + ".csv";
+    string directoryBasePath = EnvHelper::readEnvVariable("DOCUMENT_ROOT",
+                                          "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public");
+    std::string filename = "SID" + sid + ".csv";
     std::string directoryPath = directoryBasePath + "/" + fileUUID;
     if (!fs::exists(directoryPath)) {
-        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
+        return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File not found.");
     }
-
     std::string filePath = directoryPath + "/" + filename;
     // Open file in append mode
     std::ofstream csvFile(filePath, std::ios::app);
     if (!csvFile.is_open()) {
-        std::cerr << "Failed to open CSV file." << std::endl;
+        LOG_ERROR << "Failed to open CSV file.";
         return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "Failed to open CSV file.");
     }
     auto resp = HttpResponse::newFileResponse(filePath, filename);
@@ -242,7 +232,6 @@ PacketController::getSidsList(const HttpRequestPtr &req, function<void(const Htt
             if (entry.contains("metadata") &&
                 entry["metadata"].contains("sub_system")) {
                 std::string subSystem = entry["metadata"]["sub_system"];
-                std::cout << "sub_system: " << subSystem << std::endl;
                 obj["sid"] = sid;  // numeric
                 obj["sub_system"] = subSystem;  // your lookup method
                 sidArray.append(obj);
@@ -256,7 +245,6 @@ PacketController::getSidsList(const HttpRequestPtr &req, function<void(const Htt
 
 void PacketController::persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr &req,
                                                             function<void(const HttpResponsePtr &)> &&callback) {
-
     auto sidStr = (*req->getJsonObject())["sid"].asString();
     int _sid = 0;
     try {
@@ -283,13 +271,13 @@ void PacketController::persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
     thread([packetsCopy, fileUUID]() {
         try {
-            int eachTimeNotifyClients = (int) packetsCopy->size() / 10;
+            int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
             for (size_t i = 0; i < packetsCopy->size(); ++i) {
                 auto packet = packetsCopy->at(i);
-                CSVHandler::insertPacket(packet, fileUUID);
+                bool isSuccessful = CSVHandler::insertPacket(packet, fileUUID);
                 if (i % eachTimeNotifyClients == 0) {
                     int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
-                    ClientCommunicationHelper::notifyClients(progress);
+                    ClientCommunicationHelper::notifyClients(isSuccessful ? progress : -1);
                 }
             }
         } catch (const exception &e) {
@@ -300,8 +288,23 @@ void PacketController::persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr
     }).detach();
     Json::Value pktJson;
     pktJson["message"] = "Packets are inserting. Check web socket.";
-    pktJson["link"] = "http://192.168.102.39:5000/downloadCSVFile?fileUUID=" + fileUUID + "&sid=" + sidStr;
+    pktJson["link"] = req->getLocalAddr().toIpPort() + "/downloadCSVFile?fileUUID=" + fileUUID + "&sid=" + sidStr;
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);
+    callback(resp);
+}
+
+void
+PacketController::updatePacketStructure(const HttpRequestPtr &req, function<void(const HttpResponsePtr &)> &&callback) {
+    MongoDBHandler dbHandler;
+    Json::Value resultJson;
+    if (!dbHandler.loadStructure()) {
+        LOG_INFO << "Structure did not load and can not be updated.";
+        resultJson["message"] = "Packets are inserting. Check web socket.";
+        auto resp = HttpResponse::newHttpJsonResponse(resultJson);
+        return callback(resp);
+    }
+    resultJson["message"] = "Structure updated successfully.";
+    auto resp = HttpResponse::newHttpJsonResponse(resultJson);
     callback(resp);
 }
 

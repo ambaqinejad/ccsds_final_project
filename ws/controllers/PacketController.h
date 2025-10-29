@@ -15,6 +15,7 @@ class PacketController : public drogon::HttpController<PacketController>
     ADD_METHOD_TO(PacketController::persistAllPacketsInCSVFileBasedOnSID, "/persistAllPacketsInCSVFileBasedOnSID", Post);
     ADD_METHOD_TO(PacketController::downloadCSVFile, "/downloadCSVFile", Get);
     ADD_METHOD_TO(PacketController::getSidsList, "/getSidsList/{fileUUID}", Get);
+    ADD_METHOD_TO(PacketController::updatePacketStructure, "/updatePacketStructure", Get);
 
 
     METHOD_LIST_END
@@ -27,4 +28,5 @@ class PacketController : public drogon::HttpController<PacketController>
     static void persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
     static void downloadCSVFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
     static void getSidsList(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback, const std::string& fileUUID);
+    static void updatePacketStructure(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
 };

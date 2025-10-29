@@ -9,26 +9,27 @@
 #include <mongocxx/client.hpp>
 #include <bsoncxx/json.hpp>
 #include <json/json.h>
-#include <cstdlib>
 #include "logics/CCSDS_Packet.h"
 #include <drogon/HttpController.h>
-#include <stdexcept>
+#include "helpers/EnvHelper.h"
+#include <chrono>
+using namespace std::chrono;
 
 MongoDBHandler::MongoDBHandler() {
     static mongocxx::instance instance{}; // Required once per application
-    const char* uri_env = std::getenv("MONGODB_URI");
-    std::string uri = uri_env ? uri_env : "mongodb://192.168.102.94:27017";  // fallback if env not set
-
-    std::cout << uri << std::endl;
+    std::string uri = EnvHelper::readEnvVariable("MONGODB_URI",
+                                 "mongodb://192.168.102.94:27017");
+    LOG_INFO << "DATABASE URI -------> " << uri;
     client_ = mongocxx::client{mongocxx::uri{uri}};
     database_ = client_["CCSDS_DB"];
 }
 
 
 
-void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
+bool MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
     // Serialize the extended_payload
     try {
+        auto start = high_resolution_clock::now();
         mongocxx::collection collection;
         std::string collection_name = "SID" + std::to_string(packet.sid);
         collection = database_[collection_name];
@@ -42,12 +43,14 @@ void MongoDBHandler::insertPacket(const CCSDS_Packet &packet) {
         bsoncxx::document::value subDocument = bsoncxx::from_json(jsonStr);
         doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
         collection.insert_one(doc.view());
-
-        LOG_INFO << "Packet inserted successfully.\n";
+        auto end = high_resolution_clock::now();
+        auto duration_us = duration_cast<microseconds>(end - start);  // microseconds
+        LOG_INFO << "Packet inserted successfully. Time (microseconds): " << duration_us.count() << " µs";
+        return true;
     } catch (const exception &e) {
         LOG_ERROR << "Exception caught: " << e.what() << "\n";
+        return false;
     }
-
 }
 
 void MongoDBHandler::insertHeader(bsoncxx::builder::basic::document &document, const CCSDS_Packet &packet) {
@@ -91,7 +94,7 @@ bool MongoDBHandler::loadStructure() {
     auto filter = document{} << "is_current" << true << finalize;
     auto result = history_collection.find_one(filter.view());
     if (result && (*result)["collection_name"]) {
-        std::cout << "Name: " << (*result)["collection_name"].get_string().value << std::endl;
+        LOG_INFO << "Name: " << (*result)["collection_name"].get_string().value;
         mongocxx::collection structure_collection = database_[(*result)["collection_name"].get_string().value];
         auto cursor = structure_collection.find({});
         MongoDBHandler::ccsds_structure_ = nlohmann::ordered_json::array();
@@ -101,7 +104,7 @@ bool MongoDBHandler::loadStructure() {
             MongoDBHandler::ccsds_structure_.push_back(j);
         }
         if (!MongoDBHandler::ccsds_structure_.empty()) {
-            LOG_INFO << "Structure loaded successfully from DB to RAM!\n";
+            LOG_INFO << "Structure loaded successfully from DB to RAM!";
             return true;
         }
     }
