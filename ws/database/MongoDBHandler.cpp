@@ -111,3 +111,131 @@ bool MongoDBHandler::loadStructure() {
     LOG_INFO << "Structure could not load from DB to RAM!\n";
     return false;
 }
+
+bool MongoDBHandler::insertPacketsBulk(const vector<CCSDS_Packet> &packets, size_t batchSize) {
+    return false;
+//    try {
+//        auto totalStart = high_resolution_clock::now();
+//        size_t totalPackets = packets.size();
+//        size_t processedPackets = 0;
+//
+//        LOG_INFO << "Starting bulk insertion of " << totalPackets << " packets with batch size " << batchSize;
+//
+//        // Group packets by SID (collection name)
+//        std::unordered_map<std::string, std::vector<const CCSDS_Packet*>> packetsByCollection;
+//        for (const auto& packet : packets) {
+//            std::string collection_name = "SID" + std::to_string(packet.sid);
+//            packetsByCollection[collection_name].push_back(&packet);
+//        }
+//
+//        LOG_INFO << "Packets distributed across " << packetsByCollection.size() << " collections";
+//
+//        // Process each collection
+//        for (const auto& [collection_name, collectionPackets] : packetsByCollection) {
+//            LOG_INFO << "Processing collection: " << collection_name << " with " << collectionPackets.size() << " packets";
+//
+//            mongocxx::collection collection = database_[collection_name];
+//            size_t collectionSize = collectionPackets.size();
+//
+//            // Process in batches
+//            for (size_t startIdx = 0; startIdx < collectionSize; startIdx += batchSize) {
+//                size_t endIdx = std::min(startIdx + batchSize, collectionSize);
+//                size_t currentBatchSize = endIdx - startIdx;
+//
+//                auto batchStart = high_resolution_clock::now();
+//
+//                // Create bulk operation
+//                mongocxx::bulk_write bulk = collection.create_bulk_write();
+//
+//                for (size_t i = startIdx; i < endIdx; i++) {
+//                    const CCSDS_Packet* packet = collectionPackets[i];
+//
+//                    bsoncxx::builder::basic::document doc{};
+//                    insertHeader(doc, *packet);
+//
+//                    // Convert parsedData to BSON
+//                    Json::StreamWriterBuilder writer;
+//                    std::string jsonStr = Json::writeString(writer, packet->parsedData);
+//                    bsoncxx::document::value subDocument = bsoncxx::from_json(jsonStr);
+//                    doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
+//
+//                    // Add to bulk operation as insert
+//                    mongocxx::model::insert_one insert_op{doc.view()};
+//                    bulk.append(insert_op);
+//                }
+//
+//                // Execute bulk operation
+//                mongocxx::stdx::optional<mongocxx::result::bulk_write> result = bulk.execute();
+//
+//                auto batchEnd = high_resolution_clock::now();
+//                auto batchDuration = duration_cast<milliseconds>(batchEnd - batchStart);
+//
+//                processedPackets += currentBatchSize;
+//
+//                // Progress reporting
+//                int progress = std::ceil(((double)processedPackets / (double)totalPackets) * 100);
+//                LOG_INFO << "Batch completed: " << currentBatchSize << " packets in "
+//                         << batchDuration.count() << "ms. Total progress: " << progress << "%";
+//
+//                // Notify clients of progress
+//                if (processedPackets % std::max(size_t(1), totalPackets / ClientCommunicationHelper::progressDivider) == 0) {
+//                    ClientCommunicationHelper::notifyClients(progress);
+//                }
+//            }
+//        }
+//
+//        auto totalEnd = high_resolution_clock::now();
+//        auto totalDuration = duration_cast<seconds>(totalEnd - totalStart);
+//
+//        LOG_INFO << "Bulk insertion completed: " << totalPackets << " packets in "
+//                 << totalDuration.count() << " seconds";
+//
+//        return true;
+//
+//    } catch (const std::exception& e) {
+//        LOG_ERROR << "Exception in bulk insertion: " << e.what();
+//        return false;
+//    }
+}
+
+bool MongoDBHandler::insertAllPackets(const vector<CCSDS_Packet> &packets) {
+    try {
+        auto start = high_resolution_clock::now();
+
+        // Group by collection and build documents
+        std::unordered_map<std::string, std::vector<bsoncxx::document::value>> documentsByCollection;
+
+        for (const auto& packet : packets) {
+            std::string collection_name = "SID" + std::to_string(packet.sid);
+
+            bsoncxx::builder::basic::document doc{};
+            insertHeader(doc, packet);
+
+            Json::StreamWriterBuilder writer;
+            std::string jsonStr = Json::writeString(writer, packet.parsedData);
+            bsoncxx::document::value subDocument = bsoncxx::from_json(jsonStr);
+            doc.append(bsoncxx::builder::basic::kvp("data", subDocument));
+
+            documentsByCollection[collection_name].push_back(doc.extract());
+        }
+
+        // Insert into each collection
+        for (const auto& [collection_name, documents] : documentsByCollection) {
+            mongocxx::collection collection = database_[collection_name];
+            collection.insert_many(documents);
+        }
+
+        auto end = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(end - start);
+
+        LOG_INFO << "Inserted " << packets.size() << " packets across "
+                 << documentsByCollection.size() << " collections in "
+                 << duration.count() << "ms";
+
+        return true;
+
+    } catch (const std::exception& e) {
+        LOG_ERROR << "Exception in insertAllPackets: " << e.what();
+        return false;
+    }
+}

@@ -84,27 +84,47 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
                                                   function<void(const HttpResponsePtr &)> &&callback) {
 
     std::string fileUUID = (*req->getJsonObject())["fileUUID"].asString();
+
+    // Lock to prevent race conditions
+    static std::mutex mapperMutex;
+    std::unique_lock<std::mutex> lock(mapperMutex);
+
     auto it = CCSDSPacketFileHelper::uuidToSavedPacketsMapper.find(fileUUID);
     if (it == CCSDSPacketFileHelper::uuidToSavedPacketsMapper.end()) {
         return ControllerErrorHelper::sendError(std::move(callback), k404NotFound, "File UUID not found.");
     }
 
-    const std::vector<CCSDS_Packet> allPackets = it->second;
-    auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
-    thread([packetsCopy]() {
-        MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
-        for (size_t i = 0; i < packetsCopy->size(); ++i) {
-            auto packet = packetsCopy->at(i);
-            bool isSuccessful = dbHandler.insertPacket(packet);
-            if (i % eachTimeNotifyClients == 0) {
-                int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
-                ClientCommunicationHelper::notifyClients(isSuccessful ? progress : -1);
+    // MOVE the data instead of copying - this is nearly instantaneous
+    auto packets = std::make_shared<std::vector<CCSDS_Packet>>(std::move(it->second));
+
+    // Remove from the map immediately to free memory
+    CCSDSPacketFileHelper::uuidToSavedPacketsMapper.erase(it);
+    lock.unlock(); // Release the lock
+
+    LOG_INFO << "Starting MongoDB persistence for " << packets->size() << " packets";
+
+    thread([packets]() {
+        try {
+            MongoDBHandler dbHandler;
+            int eachTimeNotifyClients = (int) packets->size() / ClientCommunicationHelper::progressDivider;
+            for (size_t i = 0; i < packets->size(); ++i) {
+                auto packet = packets->at(i);
+                dbHandler.insertPacket(packet);
+                if (i % eachTimeNotifyClients == 0) {
+                    int progress = std::ceil(((double) i / (double) packets->size()) * 100);
+                    ClientCommunicationHelper::notifyClients(progress);
+                }
             }
+
+        } catch (const std::exception& e) {
+            LOG_ERROR << "Error in MongoDB persistence: " << e.what();
+            ClientCommunicationHelper::notifyClients(-1);
         }
     }).detach();
+
     Json::Value pktJson;
     pktJson["message"] = "Packets insertion is in progress.";
+    pktJson["packetCount"] = static_cast<Json::UInt64>(packets->size());
     auto resp = HttpResponse::newHttpJsonResponse(pktJson);
     callback(resp);
 }

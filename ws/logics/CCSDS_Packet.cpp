@@ -45,33 +45,53 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
     };
 
     static const std::unordered_map<std::string, std::function<void(size_t &, const std::string &)>> handlers = {
+            {"uint", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<uint>(offset, name);
+                offset += sizeof(uint);
+            }},
+            {"int", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<int>(offset, name);
+                offset += sizeof(int);
+            }},
             {"uint8_t", [&](size_t &offset, const std::string &name) {
                 mapPayloadToMeaningfulData<uint8_t>(offset, name);
                 offset += sizeof(uint8_t);
-            }},
-            {"uint16_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint16_t>(offset, name);
-                offset += sizeof(uint16_t);
-            }},
-            {"uint32_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint32_t>(offset, name);
-                offset += sizeof(uint32_t);
-            }},
-            {"uint64_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint64_t>(offset, name);
-                offset += sizeof(uint64_t);
             }},
             {"int8_t", [&](size_t &offset, const std::string &name) {
                 mapPayloadToMeaningfulData<int8_t>(offset, name);
                 offset += sizeof(int8_t);
             }},
+            {"uint16_t", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<uint16_t>(offset, name);
+                offset += sizeof(uint16_t);
+            }},
+            {"int16_t", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<int16_t>(offset, name);
+                offset += sizeof(int16_t);
+            }},
+            {"uint32_t", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<uint32_t>(offset, name);
+                offset += sizeof(uint32_t);
+            }},
+            {"int32_t", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<int32_t>(offset, name);
+                offset += sizeof(int32_t);
+            }},
+            {"uint64_t", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<uint64_t>(offset, name);
+                offset += sizeof(uint64_t);
+            }},
+            {"int64_t", [&](size_t &offset, const std::string &name) {
+                mapPayloadToMeaningfulData<int64_t>(offset, name);
+                offset += sizeof(int64_t);
+            }},
             {"double", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<double_t>(offset, name);
-                offset += sizeof(double_t);
+                mapPayloadToMeaningfulData<double>(offset, name);
+                offset += sizeof(double);
             }},
             {"float", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<float_t>(offset, name);
-                offset += sizeof(float_t);
+                mapPayloadToMeaningfulData<float>(offset, name);
+                offset += sizeof(float);
             }},
             {"double_t", [&](size_t &offset, const std::string &name) {
                 mapPayloadToMeaningfulData<double_t>(offset, name);
@@ -169,9 +189,9 @@ template<typename T>
 void CCSDS_Packet::mapPayloadToMeaningfulData(size_t offset, const string &fieldName) {
     T value;
     std::memcpy(&value, payload.data() + offset, sizeof(T));
-//    if (value == INFINITY) {
-//        value = 0;
-//    }
+    if (isnan(value)) {
+        value = 0;
+    }
     parsedData[fieldName] = value; // Implicitly constructs a FieldValue
 }
 
