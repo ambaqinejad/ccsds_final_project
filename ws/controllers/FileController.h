@@ -19,4 +19,17 @@ class FileController : public drogon::HttpController<FileController>
     ADD_METHOD_TO(FileController::uploadFile, "/upload", Post);
     METHOD_LIST_END
     static void uploadFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void finalizeUpload(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
+private:
+    struct FileSession {
+        std::string fileName;
+        std::string fileUUID;
+        size_t totalChunks;
+        size_t receivedChunks = 0;
+        std::string tempDir;
+        std::chrono::system_clock::time_point lastUpdate;
+    };
+
+    static std::unordered_map<std::string, FileSession> fileSessions_;
+    static std::mutex sessionsMutex_;
 };

@@ -28,6 +28,20 @@ public:
     template<typename T>
     void mapPayloadToMeaningfulData(size_t offset, const std::string& fieldName);
 
+    void mapBitsToMeaningfulData(size_t &byteOffset, size_t &bitOffset,
+                                 size_t bitCount, const std::string &fieldName);
+
+    static uint8_t extractBits(const uint8_t* data,
+                         size_t &byteOffset,
+                         size_t &bitOffset,
+                         size_t bitCount);
+
+    template<typename T>
+    T readBigEndian(const uint8_t* data);
+
+    template<typename T>
+    T swapEndianIfNeeded(const T& val);
+
     // private:
     uint16_t main_frame_header;
     uint16_t packet_id;
