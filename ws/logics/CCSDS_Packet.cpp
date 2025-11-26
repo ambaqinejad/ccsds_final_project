@@ -26,18 +26,16 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
 
     auto read_uint16 = [&](size_t &offset) {
         uint16_t value;
-        std::memcpy(&value, &chunk[offset], sizeof(value));
+        value = readBigEndian<uint16_t>(chunk.data() + offset);
         offset += sizeof(value);
-        // return ntohs(value);
         std::cout << std::hex << std::setw(4) << std::setfill('0') << value << std::endl;
         std::cout << std::hex << std::setw(4) << std::setfill('0') << ntohs(value) << std::endl;
-
         return value;
     };
 
     auto read_uint32 = [&](size_t &offset) {
         uint32_t value;
-        std::memcpy(&value, &chunk[offset], sizeof(value));
+        value = readBigEndian<uint32_t>(chunk.data() + offset);
         offset += sizeof(value);
         // return ntohs(value);
         std::cout << std::hex << std::setw(8) << std::setfill('0') << value << std::endl;
@@ -48,7 +46,7 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
 
     auto read_uint64 = [&](size_t &offset) {
         uint64_t value;
-        std::memcpy(&value, &chunk[offset], sizeof(value));
+        value = readBigEndian<uint64_t>(chunk.data() + offset);
         offset += sizeof(value);
         // return ntohs(value);
         std::cout << std::hex << std::setw(16) << std::setfill('0') << value << std::endl;
@@ -153,7 +151,8 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
         if (fieldName == "_id" || fieldName == "metadata") {
             continue;
         }
-        std::string fieldType = topple.value();
+        nlohmann::ordered_json fieldData = topple.value();
+        std::string fieldType = fieldData["type"];
         auto handler = handlers.find(fieldType);
         if (handler != handlers.end()) {
             bitOffset = 0;
