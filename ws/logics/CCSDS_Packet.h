@@ -42,6 +42,30 @@ public:
     template<typename T>
     T swapEndianIfNeeded(const T& val);
 
+    std::string normalize(const std::string& s) {
+        if (s == "uint8" || s == "uint8_t")
+            return "uint8_t";
+        else if (s == "uint16" || s == "uint16_t")
+            return "uint16_t";
+        else if (s == "uint32" || s == "uint32_t")
+            return "uint32_t";
+        else if (s == "uint64" || s == "uint64_t")
+            return "uint64_t";
+        else if (s == "int8" || s == "int8_t")
+            return "int8_t";
+        else if (s == "int16" || s == "int16_t")
+            return "int16_t";
+        else if (s == "int32" || s == "int32_t")
+            return "int32_t";
+        else if (s == "int64" || s == "int64_t")
+            return "int64_t";
+        else if (s == "float" || s == "float_t")
+            return "float_t";
+        else if (s == "double" || s == "double_t")
+            return "double_t";
+        return s;
+    }
+
     // private:
     uint16_t main_frame_header;
     uint16_t packet_id;

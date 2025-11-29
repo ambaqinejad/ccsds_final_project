@@ -96,14 +96,6 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
                 mapPayloadToMeaningfulData<int64_t>(offset, name);
                 offset += sizeof(int64_t);
             }},
-            {"double", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<double>(offset, name);
-                offset += sizeof(double);
-            }},
-            {"float", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<float>(offset, name);
-                offset += sizeof(float);
-            }},
             {"double_t", [&](size_t &offset, const std::string &name) {
                 mapPayloadToMeaningfulData<double_t>(offset, name);
                 offset += sizeof(double_t);
@@ -153,7 +145,7 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
         }
         nlohmann::ordered_json fieldData = topple.value();
         std::string fieldType = fieldData["type"];
-        auto handler = handlers.find(fieldType);
+        auto handler = handlers.find(normalize(fieldType));
         if (handler != handlers.end()) {
             bitOffset = 0;
             handler->second(offset, fieldName);
