@@ -40,6 +40,7 @@ add_executable(${PROJECT_NAME} main.cc
         helpers/StructureHelper.cpp
         helpers/StructureHelper.h
         helpers/EnvHelper.h
+        helpers/Constants.h
 )
 
 # ##############################################################################

@@ -38,16 +38,27 @@ void CCSDSPacketFileHelper::processFile(const string &filePath, const std::strin
     std::vector<std::vector<uint8_t>> chunks;
     for (size_t i = 0; i < buffer.size() - 1; ++i) {
         if (buffer[i] == 0x48 && buffer[i + 1] == 0x48) {
-            for (size_t j = i+2; j < buffer.size() - 1; ++j) {
+            size_t j = 0;
+            bool is_chunked_in_inner_for = false;
+            for (j = i+2; j < buffer.size() - 1; ++j) {
                 if (buffer[j] == 0x48 && buffer[j + 1] == 0x48) {
                     if (j - i == 128) {
                         vector<uint8_t> chunk;
                         chunk.insert(chunk.begin(), buffer.begin() + i, buffer.begin() + j);
                         chunks.push_back(chunk);
                         count_of_valid_chunks ++;
+                        is_chunked_in_inner_for = true;
+                        i = j - 1;
                     }
                     break;
                 }
+            }
+            if (j - i == 127 && !is_chunked_in_inner_for) {
+                vector<uint8_t> chunk;
+                chunk.insert(chunk.begin(), buffer.begin() + i, buffer.begin() + j);
+                chunks.push_back(chunk);
+                count_of_valid_chunks ++;
+                i = j - 1;
             }
         }
     }
@@ -58,7 +69,8 @@ std::map<std::string, std::vector<CCSDS_Packet>> CCSDSPacketFileHelper::uuidToSa
 std::map<std::string, std::set<uint8_t >> CCSDSPacketFileHelper::uuidToSids;
 void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, int count_of_valid_chunks, const std::string &fileUUID) {
     const size_t BATCH_SIZE = 50000; // Process 50K packets at a time
-    int eachTimeNotifyClients = count_of_valid_chunks / ClientCommunicationHelper::progressDivider;
+    int eachTimeNotifyClients = count_of_valid_chunks / ClientCommunicationHelper::progressDivider != 0 ?
+                                count_of_valid_chunks / ClientCommunicationHelper::progressDivider : 1;
 
     LOG_INFO << "Starting batch processing of " << chunks.size() << " chunks";
 

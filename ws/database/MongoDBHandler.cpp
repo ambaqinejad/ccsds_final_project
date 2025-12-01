@@ -12,13 +12,14 @@
 #include "logics/CCSDS_Packet.h"
 #include <drogon/HttpController.h>
 #include "helpers/EnvHelper.h"
+#include "helpers/Constants.h"
 #include <chrono>
 using namespace std::chrono;
 
 MongoDBHandler::MongoDBHandler() {
     static mongocxx::instance instance{}; // Required once per application
     std::string uri = EnvHelper::readEnvVariable("MONGODB_URI",
-                                 "mongodb://192.168.102.94:27017");
+                                 Constants::MONGODB_DEFAULT_URI);
     LOG_INFO << "DATABASE URI -------> " << uri;
     client_ = mongocxx::client{mongocxx::uri{uri}};
     database_ = client_["CCSDS_DB"];

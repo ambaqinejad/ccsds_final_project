@@ -7,6 +7,7 @@ using namespace std;
 
 #include <drogon/HttpFilter.h>
 #include "helpers/EnvHelper.h"
+#include "helpers/Constants.h"
 #include <filesystem>
 
 using namespace std;
@@ -14,31 +15,31 @@ namespace fs = std::filesystem;
 
 int main(int argc, const char *argv[]) {
     string documentRoot = EnvHelper::readEnvVariable("DOCUMENT_ROOT",
-                          "/home/ambaqinejad/Desktop/drogon_ccsds/ccsds_final_project/ws/public");
-    string uploadPath = documentRoot + "/uploads";
+                          Constants::DEFAULT_DOCUMENT_ROOT);
+    string uploadPath = documentRoot + Constants::DEFAULT_UPLOAD_DIR;
     MongoDBHandler dbHandler;
     if (!dbHandler.loadStructure()) {
-        LOG_INFO << "Websocket server could not start because structure did not load.";
+        LOG_INFO << Constants::SERVER_COULD_NOT_START_STRUCTURE;
         return 0;
     }
 
     if (!fs::exists(documentRoot)) {
         if (!fs::create_directory(documentRoot)) {
-            LOG_INFO << "Websocket server could not start because it can not create public folder.";
+            LOG_INFO << Constants::SERVER_COULD_NOT_START_PUBLIC_DIR;
             return -1;
         }
     }
 
     if (!fs::exists(uploadPath)) {
         if (!fs::create_directory(uploadPath)) {
-            LOG_INFO << "Websocket server could not start because it can not create upload folder.";
+            LOG_INFO << Constants::SERVER_COULD_NOT_START_UPLOAD_DIR;
             return -1;
         }
     }
 
     int port = 5000;
     if (argc > 1) port = stoi(argv[1]);
-    LOG_INFO << "Starting WebSocket server on port " << port;
+    LOG_INFO << Constants::SERVER_START_ON_PORT << port;
     auto &app = drogon::app();
 
     // 1️⃣ Handle OPTIONS (CORS preflight)
@@ -47,10 +48,9 @@ int main(int argc, const char *argv[]) {
                                     drogon::AdviceChainCallback &&accb) {
         if (req->getMethod() == drogon::Options) {
             auto resp = drogon::HttpResponse::newHttpResponse();
-            resp->addHeader("Access-Control-Allow-Origin", "*");
-            resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            resp->addHeader("Access-Control-Allow-Headers",
-                            "Content-Type, Authorization, X-Requested-With, x-signalr-user-agent");
+            resp->addHeader(Constants::ACCESS_CONTROL_ALLOW_ORIGIN_KEY, Constants::ALL);
+            resp->addHeader(Constants::ACCESS_CONTROL_ALLOW_METHOD_KEY, Constants::ACCESS_CONTROL_ALLOW_ALL_METHOD_VALUE);
+            resp->addHeader(Constants::ACCESS_CONTROL_ALLOW_HEADER_KEY, Constants::ACCESS_CONTROL_ALLOW_HEADER_VALUE);
             resp->setStatusCode(drogon::k200OK);
             acb(resp);  // Send immediate response for OPTIONS
         } else {
@@ -61,10 +61,9 @@ int main(int argc, const char *argv[]) {
     // 3️⃣ Add CORS headers to all valid responses
     app.registerPostHandlingAdvice([](const drogon::HttpRequestPtr &req,
                                       const drogon::HttpResponsePtr &resp) {
-        resp->addHeader("Access-Control-Allow-Origin", "*");
-        resp->addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        resp->addHeader("Access-Control-Allow-Headers",
-                        "Content-Type, Authorization, X-Requested-With, x-signalr-user-agent");
+        resp->addHeader(Constants::ACCESS_CONTROL_ALLOW_ORIGIN_KEY, Constants::ALL);
+        resp->addHeader(Constants::ACCESS_CONTROL_ALLOW_METHOD_KEY, Constants::ACCESS_CONTROL_ALLOW_ALL_METHOD_VALUE);
+        resp->addHeader(Constants::ACCESS_CONTROL_ALLOW_HEADER_KEY, Constants::ACCESS_CONTROL_ALLOW_HEADER_VALUE);
     });
 
     // 4️⃣ Configure Drogon app
@@ -72,8 +71,6 @@ int main(int argc, const char *argv[]) {
             .setUploadPath(uploadPath)
             .addListener("0.0.0.0", port)
             .setDocumentRoot(documentRoot)
-//            .registerCustomExtensionMime("csv", "application/octet-stream") // Force download for CSV
-//            .registerCustomExtensionMime("txt", "text/plain") // Explicitly set txt MIME type
             .run();
     return 0;
 }

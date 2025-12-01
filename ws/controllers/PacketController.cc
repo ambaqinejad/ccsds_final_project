@@ -106,7 +106,8 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
     thread([packets]() {
         try {
             MongoDBHandler dbHandler;
-            int eachTimeNotifyClients = (int) packets->size() / ClientCommunicationHelper::progressDivider;
+            int eachTimeNotifyClients = (int) packets->size() / ClientCommunicationHelper::progressDivider != 0 ?
+                                        (int) packets->size() / ClientCommunicationHelper::progressDivider : 1;
             for (size_t i = 0; i < packets->size(); ++i) {
                 auto packet = packets->at(i);
                 dbHandler.insertPacket(packet);
@@ -158,7 +159,9 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
     thread([packetsCopy]() {
         MongoDBHandler dbHandler;
-        int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
+        int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider != 0 ?
+                                    (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider : 1;
+
         for (size_t i = 0; i < packetsCopy->size(); ++i) {
             auto packet = packetsCopy->at(i);
             dbHandler.insertPacket(packet);
@@ -185,7 +188,9 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(allPackets);
     thread([packetsCopy, fileUUID]() {
         try {
-            int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
+            int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider != 0 ?
+                                        (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider : 1;
+
             for (size_t i = 0; i < packetsCopy->size(); ++i) {
                 auto packet = packetsCopy->at(i);
                 bool isSuccessful = CSVHandler::insertPacket(packet, fileUUID);
@@ -246,16 +251,22 @@ PacketController::getSidsList(const HttpRequestPtr &req, function<void(const Htt
     for (uint8_t sid: allSids) {
         Json::Value obj(Json::objectValue);
         auto &ccsds_structure = MongoDBHandler::ccsds_structure_;
-        uint8_t index = sid - 1;
-        if (index < ccsds_structure.size()) {
-            const auto &entry = ccsds_structure[index];
+        auto iterator = std::find_if(ccsds_structure.begin(), ccsds_structure.end(), [&](const auto& obj) {
+            return obj.contains("metadata")
+                   && obj["metadata"].contains("SIDNumber")
+                   && obj["metadata"]["SIDNumber"] == sid;
+        });
+
+        if (iterator != ccsds_structure.end()) {
+            auto &entry = *iterator;
             if (entry.contains("metadata") &&
-                entry["metadata"].contains("sub_system")) {
-                std::string subSystem = entry["metadata"]["sub_system"];
+                entry["metadata"].contains("SID")) {
+                std::string sid_name = entry["metadata"]["SID"];
                 obj["sid"] = sid;  // numeric
-                obj["sub_system"] = subSystem;  // your lookup method
+                obj["sid_name"] = sid_name;  // your lookup method
                 sidArray.append(obj);
             }
+            // use foundObj
         }
     }
     sidJson["sids"] = sidArray;
@@ -291,7 +302,9 @@ void PacketController::persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr
     auto packetsCopy = std::make_shared<std::vector<CCSDS_Packet>>(filteredPackets);
     thread([packetsCopy, fileUUID]() {
         try {
-            int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider;
+            int eachTimeNotifyClients = (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider != 0 ?
+                                        (int) packetsCopy->size() / ClientCommunicationHelper::progressDivider : 1;
+
             for (size_t i = 0; i < packetsCopy->size(); ++i) {
                 auto packet = packetsCopy->at(i);
                 bool isSuccessful = CSVHandler::insertPacket(packet, fileUUID);
