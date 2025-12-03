@@ -100,7 +100,7 @@ void CCSDSPacketFileHelper::parseData(std::vector<std::vector<uint8_t>> chunks, 
 
             // Progress notification
             if (i % eachTimeNotifyClients == 0) {
-                int progress = std::ceil(((double)i / (double)count_of_valid_chunks) * 100);
+                int progress = std::ceil(((double)(i+1) / (double)count_of_valid_chunks) * 100);
                 ClientCommunicationHelper::notifyClients(progress);
             }
         }

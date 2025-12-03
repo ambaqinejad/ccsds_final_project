@@ -17,19 +17,16 @@ class FileController : public drogon::HttpController<FileController>
   public:
     METHOD_LIST_BEGIN
     ADD_METHOD_TO(FileController::uploadFile, "/upload", Post);
+    ADD_METHOD_TO(FileController::startUpload, "/startUpload", Post);
+    ADD_METHOD_TO(FileController::uploadChunk, "/uploadChunk", Post);
+    ADD_METHOD_TO(FileController::finalizeUpload, "/finalizeUpload", Post);
     METHOD_LIST_END
     static void uploadFile(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void startUpload(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
+    static void uploadChunk(const HttpRequestPtr& req, std::function<void (const HttpResponsePtr &)> &&callback) ;
     static void finalizeUpload(const HttpRequestPtr &req, std::function<void(const HttpResponsePtr &)> &&callback);
 private:
-    struct FileSession {
-        std::string fileName;
-        std::string fileUUID;
-        size_t totalChunks;
-        size_t receivedChunks = 0;
-        std::string tempDir;
-        std::chrono::system_clock::time_point lastUpdate;
-    };
-
-    static std::unordered_map<std::string, FileSession> fileSessions_;
     static std::mutex sessionsMutex_;
+    static std::unordered_map<std::string, std::string> fileUUIDToCorrespondingDirPath_;
+    static std::unordered_map<std::string, int> fileUUIDToCorrespondingTotalChunks_;
 };

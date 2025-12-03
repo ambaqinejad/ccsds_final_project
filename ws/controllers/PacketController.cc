@@ -112,7 +112,7 @@ void PacketController::persistAllPacketsInMongoDB(const HttpRequestPtr &req,
                 auto packet = packets->at(i);
                 dbHandler.insertPacket(packet);
                 if (i % eachTimeNotifyClients == 0) {
-                    int progress = std::ceil(((double) i / (double) packets->size()) * 100);
+                    int progress = std::ceil(((double) (i+1) / (double) packets->size()) * 100);
                     ClientCommunicationHelper::notifyClients(progress);
                 }
             }
@@ -166,7 +166,7 @@ void PacketController::persistAllPacketsInMongoDBBasedOnSID(const HttpRequestPtr
             auto packet = packetsCopy->at(i);
             dbHandler.insertPacket(packet);
             if (i % eachTimeNotifyClients == 0) {
-                int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
+                int progress = std::ceil(((double) (i+1) / (double) packetsCopy->size()) * 100);
                 ClientCommunicationHelper::notifyClients(progress);
             }
         }
@@ -195,7 +195,7 @@ void PacketController::persistAllPacketsInCSVFile(const HttpRequestPtr &req,
                 auto packet = packetsCopy->at(i);
                 bool isSuccessful = CSVHandler::insertPacket(packet, fileUUID);
                 if (i % eachTimeNotifyClients == 0) {
-                    int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
+                    int progress = std::ceil(((double) (i+1) / (double) packetsCopy->size()) * 100);
                     ClientCommunicationHelper::notifyClients(isSuccessful ? progress : -1);
                 }
             }
@@ -309,7 +309,7 @@ void PacketController::persistAllPacketsInCSVFileBasedOnSID(const HttpRequestPtr
                 auto packet = packetsCopy->at(i);
                 bool isSuccessful = CSVHandler::insertPacket(packet, fileUUID);
                 if (i % eachTimeNotifyClients == 0) {
-                    int progress = std::ceil(((double) i / (double) packetsCopy->size()) * 100);
+                    int progress = std::ceil(((double) (i+1) / (double) packetsCopy->size()) * 100);
                     ClientCommunicationHelper::notifyClients(isSuccessful ? progress : -1);
                 }
             }

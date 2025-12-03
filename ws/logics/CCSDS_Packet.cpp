@@ -20,146 +20,152 @@ CCSDS_Packet::CCSDS_Packet() {
 }
 
 CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
-    CCSDS_Packet packet;
-    size_t offset = 0;
-    size_t bitOffset  = 0;
+    try {
 
-    auto read_uint16 = [&](size_t &offset) {
-        uint16_t value;
-        value = readBigEndian<uint16_t>(chunk.data() + offset);
-        offset += sizeof(value);
-        std::cout << std::hex << std::setw(4) << std::setfill('0') << value << std::endl;
-        std::cout << std::hex << std::setw(4) << std::setfill('0') << ntohs(value) << std::endl;
-        return value;
-    };
+        CCSDS_Packet packet;
+        size_t offset = 0;
+        size_t bitOffset = 0;
 
-    auto read_uint32 = [&](size_t &offset) {
-        uint32_t value;
-        value = readBigEndian<uint32_t>(chunk.data() + offset);
-        offset += sizeof(value);
-        // return ntohs(value);
-        std::cout << std::hex << std::setw(8) << std::setfill('0') << value << std::endl;
-        std::cout << std::hex << std::setw(8) << std::setfill('0') << ntohl(value) << std::endl;
+        auto read_uint16 = [&](size_t &offset) {
+            uint16_t value;
+            value = readBigEndian<uint16_t>(chunk.data() + offset);
+            offset += sizeof(value);
+            std::cout << std::hex << std::setw(4) << std::setfill('0') << value << std::endl;
+            std::cout << std::hex << std::setw(4) << std::setfill('0') << ntohs(value) << std::endl;
+            return value;
+        };
 
-        return value;
-    };
+        auto read_uint32 = [&](size_t &offset) {
+            uint32_t value;
+            value = readBigEndian<uint32_t>(chunk.data() + offset);
+            offset += sizeof(value);
+            // return ntohs(value);
+            std::cout << std::hex << std::setw(8) << std::setfill('0') << value << std::endl;
+            std::cout << std::hex << std::setw(8) << std::setfill('0') << ntohl(value) << std::endl;
 
-    auto read_uint64 = [&](size_t &offset) {
-        uint64_t value;
-        value = readBigEndian<uint64_t>(chunk.data() + offset);
-        offset += sizeof(value);
-        // return ntohs(value);
-        std::cout << std::hex << std::setw(16) << std::setfill('0') << value << std::endl;
-        std::cout << std::hex << std::setw(16) << std::setfill('0') << __builtin_bswap64(value) << std::endl;
+            return value;
+        };
 
-        return value;
-    };
+        auto read_uint64 = [&](size_t &offset) {
+            uint64_t value;
+            value = readBigEndian<uint64_t>(chunk.data() + offset);
+            offset += sizeof(value);
+            // return ntohs(value);
+            std::cout << std::hex << std::setw(16) << std::setfill('0') << value << std::endl;
+            std::cout << std::hex << std::setw(16) << std::setfill('0') << __builtin_bswap64(value) << std::endl;
 
-    static const std::unordered_map<std::string, std::function<void(size_t &, const std::string &)>> handlers = {
-            {"uint", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint>(offset, name);
-                offset += sizeof(uint);
-            }},
-            {"int", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<int>(offset, name);
-                offset += sizeof(int);
-            }},
-            {"uint8_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint8_t>(offset, name);
-                offset += sizeof(uint8_t);
-            }},
-            {"int8_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<int8_t>(offset, name);
-                offset += sizeof(int8_t);
-            }},
-            {"uint16_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint16_t>(offset, name);
-                offset += sizeof(uint16_t);
-            }},
-            {"int16_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<int16_t>(offset, name);
-                offset += sizeof(int16_t);
-            }},
-            {"uint32_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint32_t>(offset, name);
-                offset += sizeof(uint32_t);
-            }},
-            {"int32_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<int32_t>(offset, name);
-                offset += sizeof(int32_t);
-            }},
-            {"uint64_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<uint64_t>(offset, name);
-                offset += sizeof(uint64_t);
-            }},
-            {"int64_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<int64_t>(offset, name);
-                offset += sizeof(int64_t);
-            }},
-            {"double_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<double_t>(offset, name);
-                offset += sizeof(double_t);
-            }},
-            {"float_t", [&](size_t &offset, const std::string &name) {
-                mapPayloadToMeaningfulData<float_t>(offset, name);
-                offset += sizeof(float_t);
-            }},
-    };
+            return value;
+        };
 
-    // Read fixed fields
-    packet.main_frame_header = read_uint16(offset);
-    packet.packet_id = read_uint16(offset);
-    packet.packet_sequence_control = read_uint16(offset);
-    packet.packet_length = read_uint16(offset);
-    packet.data_field_header = chunk[offset++];
-    packet.service_type = chunk[offset++];
-    packet.sub_service_type = chunk[offset++];
-    packet.sid = chunk[offset++];
-    packet.timestamp = read_uint32(offset);
-    packet.crc_fail_upload_map = read_uint64(offset);
-    packet.flash_address = read_uint32(offset);
+        static const std::unordered_map<std::string, std::function<void(size_t &, const std::string &)>> handlers = {
+                {"uint",     [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<uint>(offset, name);
+                    offset += sizeof(uint);
+                }},
+                {"int",      [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<int>(offset, name);
+                    offset += sizeof(int);
+                }},
+                {"uint8_t",  [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<uint8_t>(offset, name);
+                    offset += sizeof(uint8_t);
+                }},
+                {"int8_t",   [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<int8_t>(offset, name);
+                    offset += sizeof(int8_t);
+                }},
+                {"uint16_t", [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<uint16_t>(offset, name);
+                    offset += sizeof(uint16_t);
+                }},
+                {"int16_t",  [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<int16_t>(offset, name);
+                    offset += sizeof(int16_t);
+                }},
+                {"uint32_t", [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<uint32_t>(offset, name);
+                    offset += sizeof(uint32_t);
+                }},
+                {"int32_t",  [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<int32_t>(offset, name);
+                    offset += sizeof(int32_t);
+                }},
+                {"uint64_t", [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<uint64_t>(offset, name);
+                    offset += sizeof(uint64_t);
+                }},
+                {"int64_t",  [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<int64_t>(offset, name);
+                    offset += sizeof(int64_t);
+                }},
+                {"double_t", [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<double_t>(offset, name);
+                    offset += sizeof(double_t);
+                }},
+                {"float_t",  [&](size_t &offset, const std::string &name) {
+                    mapPayloadToMeaningfulData<float_t>(offset, name);
+                    offset += sizeof(float_t);
+                }},
+        };
 
-    // Remaining bytes are payload
-    packet.payload.assign(chunk.begin() + offset, chunk.end());
-    offset = 0;
-    auto it = std::find_if(
-            MongoDBHandler::ccsds_structure_.begin(),
-            MongoDBHandler::ccsds_structure_.end(),
-            [&](const nlohmann::ordered_json& obj) {
-                std::string sid_str = obj["metadata"]["SID"].get<std::string>();
-                if (sid_str.rfind("SID", 0) == 0) {   // starts with "SID"
-                    sid_str = sid_str.substr(3);     // keep only the number part
+        // Read fixed fields
+        packet.main_frame_header = read_uint16(offset);
+        packet.packet_id = read_uint16(offset);
+        packet.packet_sequence_control = read_uint16(offset);
+        packet.packet_length = read_uint16(offset);
+        packet.data_field_header = chunk[offset++];
+        packet.service_type = chunk[offset++];
+        packet.sub_service_type = chunk[offset++];
+        packet.sid = chunk[offset++];
+        packet.timestamp = read_uint32(offset);
+        packet.crc_fail_upload_map = read_uint64(offset);
+        packet.flash_address = read_uint32(offset);
+
+        // Remaining bytes are payload
+        packet.payload.assign(chunk.begin() + offset, chunk.end());
+        // this->payload.assign(chunk.begin() + offset, chunk.end());
+        offset = 0;
+        auto it = std::find_if(
+                MongoDBHandler::ccsds_structure_.begin(),
+                MongoDBHandler::ccsds_structure_.end(),
+                [&](const nlohmann::ordered_json &obj) {
+                    std::string sid_str = obj["metadata"]["SID"].get<std::string>();
+                    if (sid_str.rfind("SID", 0) == 0) {   // starts with "SID"
+                        sid_str = sid_str.substr(3);     // keep only the number part
+                    }
+                    int sid_val = std::stoi(sid_str);
+                    return sid_val == packet.sid;
                 }
-                int sid_val = std::stoi(sid_str);
-                return sid_val == packet.sid;
+        );
+
+        if (it == MongoDBHandler::ccsds_structure_.end()) {
+            return packet;
+        }
+        for (auto topple = it->begin(); topple != it->end(); ++topple) {
+            const std::string &fieldName = topple.key();
+            if (fieldName == "_id" || fieldName == "metadata") {
+                continue;
             }
-    );
+            nlohmann::ordered_json fieldData = topple.value();
+            std::string fieldType = fieldData["type"];
+            auto handler = handlers.find(normalize(fieldType));
+            if (handler != handlers.end()) {
+                bitOffset = 0;
+                handler->second(offset, fieldName);
+            }
+            if (fieldType.rfind("bit", 0) == 0) {
+                size_t bitCount = std::stoi(fieldType.substr(3));
+                if (bitCount < 1 || bitCount > 7)
+                    throw std::runtime_error("bit count must be 1-7");
+                mapBitsToMeaningfulData(offset, bitOffset, bitCount, fieldName);
+            }
+        }
 
-    if (it == MongoDBHandler::ccsds_structure_.end()) {
+        packet.parsedData = parsedData;
         return packet;
+    } catch (const std::exception &e) {
+        cout << e.what();
     }
-    for (auto topple = it->begin(); topple != it->end(); ++topple) {
-        const std::string& fieldName = topple.key();
-        if (fieldName == "_id" || fieldName == "metadata") {
-            continue;
-        }
-        nlohmann::ordered_json fieldData = topple.value();
-        std::string fieldType = fieldData["type"];
-        auto handler = handlers.find(normalize(fieldType));
-        if (handler != handlers.end()) {
-            bitOffset = 0;
-            handler->second(offset, fieldName);
-        }
-        if (fieldType.rfind("bit", 0) == 0) {
-            size_t bitCount = std::stoi(fieldType.substr(3));
-            if (bitCount < 1 || bitCount > 7)
-                throw std::runtime_error("bit count must be 1-7");
-            mapBitsToMeaningfulData(offset, bitOffset, bitCount, fieldName);
-        }
-    }
-
-    packet.parsedData = parsedData;
-    return packet;
 }
 
 Json::Value CCSDS_Packet::toJson() const {
