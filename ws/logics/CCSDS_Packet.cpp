@@ -123,7 +123,7 @@ CCSDS_Packet CCSDS_Packet::deserialize_packet(vector<uint8_t> &chunk) {
 
         // Remaining bytes are payload
         packet.payload.assign(chunk.begin() + offset, chunk.end());
-        // this->payload.assign(chunk.begin() + offset, chunk.end());
+        this->payload.assign(chunk.begin() + offset, chunk.end());
         offset = 0;
         auto it = std::find_if(
                 MongoDBHandler::ccsds_structure_.begin(),
