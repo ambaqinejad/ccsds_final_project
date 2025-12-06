@@ -340,5 +340,3 @@ PacketController::updatePacketStructure(const HttpRequestPtr &req, function<void
     auto resp = HttpResponse::newHttpJsonResponse(resultJson);
     callback(resp);
 }
-
-
